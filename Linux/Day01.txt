@@ -1,0 +1,156 @@
+(Day 03)
+~~~~~~~~~~~~~~~~~
+Linux - Day 01
+~~~~~~~~~~~~~~~~~
+=> What is an OS?
+OS is a software which is used to interact with the machine
+It acts as mediator between user and the machine
+OS is mandatory to use any device
+It provides an environment to run applications
+
+=> Types of OS
+Windows, macOS, Linux/Ubuntu
+
+=> Windows Vs Linux OS
+Windows OS is meant for personal use
+Linux OS is meant for professional use
+
+Window OS is not free
+Linux OS is free and open source
+
+Window OS has security issues
+Linux OS is highly secure
+
+Windows OS is developed by Microsoft
+Linux OS is developed by Linus Torvalds
+
+Windows OS is GUI based
+Linux OS is CLI based - Command Line Interface - Commands
+
+=> Linux Distributions (Distros)
+A Linux distribution (distro) is an OS that is built on Linux Kernel
+In AWS Cloud, most of these distributions are available as Amazon Machine Image (AMI)
+	1. RPM based (RedHat Package Manager)
+		RedHat
+		Cent OS
+		Amazon Linux 2023** - 6.1 & 6.12
+	2. Debian based
+		Ubuntu** - 2024
+		Suse
+
+=> Launch an EC2 Instance
+AWS Account -----> Navigate to EC2 Service -----> Launch Instance(s) 
+
+=> Connecting with the Instance (VM)
+Multiple approaches;
+	1. AWS Console
+	2. 3rd party tools - MobaXTerm**, Putty & PuttyGen
+
+=> Linux Architecture
+It has 3 main layers;
+	Shell
+	Kernel
+	Hardware Components
+
+Shell is a mediator between user and kernel
+It will read commands/instructions executed by the users
+Validate the command syntax
+Convert command into Kernel understandable language
+
+Kernel is heart of Linux OS
+It will receive instructions from shell
+Kernel will covert commands into hardware understandable format
+It is a mediator between shell and hardware components
+
+Hardware components includes physical components of a machine (CPU, RAM, Harddisk, Network Card, etc...)
+
+Free tier limits;
+750 hours per month
+
+N.Virginia (us-east-1)	--- 1 VM --- 750 free hours per month
+					--- 2 VMs --- 750/2 = 375 free hours per month per VM
+					--- 3 VMs --- 750/3 = 250 free hours per month per VM
+
+Steps;
+Name: Linux Server (Optional)
+AMI: Select the OS
+Instance Type: represents the functionality of VM
+Keypair: It is used to connect with the instance
+			.pem	- MobaXTerm (Privacy Enhanced Mail)
+			.ppk		- Putty & PuttyGen (PuTTY Private Key)
+Network:
+	use Default Network (VPC - Virtual Private Cloud)
+Storage:
+	Free tier limits: 30 GB	
+
+
+'launch-wizard-20' 
+
+User names:
+	Linux ----> ec2-user
+	Ubuntu ----> ubuntu
+
+~~~~~~~~~~~~~~~~~~~~~~
+Linux Commands - Part 1
+~~~~~~~~~~~~~~~~~~~~~~
+#Update the VM
+sudo yum update -y
+
+#Clear the screen
+clear (or) control + l
+
+#Which user I'm
+whoami
+
+#To see in which path we are currently working
+pwd
+
+#To see what files/directories available in the current path
+ls (or) ls -l (or) ll
+
+#To see the date
+date
+
+#To see the cal
+cal
+
+#To see present month, past month and next month
+cal -3
+
+#To see the calendar of a complete year
+cal <YearName>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
