@@ -1,0 +1,170 @@
+clear (or) control+l
+ls 
+cal
+pwd
+whoami
+date
+----------------------------------
+Default location when we connect to an EC2 Instance;
+Amazon Linux/RedHat	----> /home/ec2-user
+Ubuntu					----> /home/ubuntu
+
+How to create Directories in Linux?
+
+Anything that we create in Linux, they are termed as files and directories
+mkdir <Directory Name>
+To verify; ls (or) ls -l (or) ll
+
+How to move inside a directory
+cd <Dir.Name>
+
+If you see ~ symbol, it represents you are in the default path of the VM (/home/ec2-user)
+
+How to identify whether it is a file or a directory?
+If you see "d" in the beginning of a line, that means its a directory
+If you see "-" in the beginning of a line, that means its a file
+
+How to swtich back to a directory?
+cd ..
+
+To come to a default path (irrespective of which directory you are working)
+cd
+
+To remove an 'empty' directory
+rmdir <Dir.Name>
+
+To remove a non-empty directory
+rm -rf <Dir.Name>
+
+How to create files
+3 ways;
+1. touch
+2. cat
+3. vi (or) nano
+
+
+Creating a file using "touch"
+touch <FileName>
+
+kastro1.py
+kastro2.py
+kastro3.py
+kastro4.py
+.
+.
+.
+kastro10.py
+
+touch kastro{1..10}.py
+
+Note: touch command will only create an empty file
+
+How to remove a specific file
+rm <FileName>
+
+how to remove a specific extension of files
+rm *.<Extension>
+
+How to write a content inside an existing file
+cat > <FileName>
+Note: This will overwrite the existing data, if avalable
+
+How to see the data available inside a file
+cat <FileName>
+
+How to preserve the old data at the same time how to write a new data
+cat >> <FileName>
+
+Creating a file and at the same time writing the data using cat command
+cat > <FileName>
+
+How to create a file using "vi" command
+vi <FileName>	----> It creates a file and will open an editor
+Press "i"			----> "i" represents insert
+esc				----> to come out from insert mode
+:wq				----> To save and quit from the file
+
+Note: If you want to come out of the file without saving it	----> :q!
+
+nano <FileName>
+Write the data
+Control + X
+Press Y to save
+Press Enter
+
+To rename a file or a directory
+mv <OldName> <NewName>
+
+To see the number of lines, characters and words available in a file
+wc <FileName>
+
+Types of users in Linux OS;
+By default we will have two types of users;
+	1. ec2-user (for amazon Linux AMIs), ubuntu (for ubuntu AMIs)	- who has least privileges/permissions 
+	2. root	- which has all the permissions
+
+How to switch to root user?
+sudo su (or) sudo -I
+
+If you see $ at the end of a line, it means you are "ec2-user"
+If you see # at the end of a line, it means you are "root" user
+
+How to become ec2-user from root user
+Type "exit"
+
+If you use "sudo su" the default path will not change
+If you use "sudo -i" the path changes to /root
+
+To see the first 10 lines available in a file
+head <FileName>
+
+To see the last 10 lines available in a file
+tail <FileName>
+
+Assignment;
+I want to see the data from line 2 to line 5 from the top in a file
+I want to see the data from line 2 to line 5 from the bottom in a file
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
