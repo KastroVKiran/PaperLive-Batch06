@@ -1,0 +1,167 @@
+(Day 05) 07-10-2025
+~~~~~~~~~~~~~~~~~
+Linux - Day 03
+~~~~~~~~~~~~~~~~~
+Default landing commands;
+sudo su
+yum update -y (Amazon Linux) OR apt update -y (Ubuntu)
+
+Linux Directory Structure;
+cd / ----> pwd ----> You will see as / ----> ls ---> You will see the default directory structure
+
+While working with switching from one directory to another directory, we have two types of paths;
+	1. Absolute Path	- it means we should give the complete path in a single command (Eg: cd /home/ec2-user/kastro/kiran/)
+	2. Relative Path	- it means we need to go inside one specific directory (Eg: cd /kastro, cd /kiran, cd /kk)
+
+WHICH
+To know in which path the commands are available in Linux directory structure
+	which mkdir
+	which pwd
+
+MAN
+To know the information about a specific command
+	man ls
+	man mkdir
+	
+HOSTNAME
+hostname -i
+hostnamectl set-hostname <Name>
+sudo -i
+hostname
+
+uptime ----> To see from how long the VM is running
+
+To see the list of packages installed
+yum list available
+dnf list available
+
+cat	- to display the content in normal order
+tac	- to display the content in reverse order
+
+To print the line numbers along with the content
+cat -n <FileName>
+
+To see the list of commands executed so far
+history
+
+COPY
+
+
+shift + a
+shift + i
+shift + o
+Insert a line below an existing line
+shift + g
+
+To see the number of lines available (when using vi command)
+:set number
+
+To go to a specific line
+:<LineNumber>
+
+To copy a line
+yy
+
+To paste the copied line
+p
+
+To delete a line
+dd
+
+To undo
+u
+
+To redo
+control + r
+
+To search for a specific word in a file
+/<WordName>
+
+To delete everything that is in a file
+:%d
+
+GREP - Global Regular Expression Print
+GREP is used to search for a word
+GREP will process teh text line by line and prints the lines which contains that word
+When using GREP, we dont have to open a file
+
+grep '<WordName>' <FileName> ----> This is case sensitive
+grep -i '<WordName>' <FileName> ----> This is not case sensitive
+
+SED - Stream Editor
+SED is used to process the data (substitute, delete, print, insert)
+using SED we can replace the text without opening a file
+
+FILE PERMISSIONS IN LINUX
+chmod
+
+For any file/directory, in Linux we have 3 categories of permissions;
+Users (u)
+Groups (g)
+Others (o)
+
+For every category we have 3 file permissions;
+read (r)
+write (w)
+execute (x)
+
+rw-r--r--  kastro.txt
+
+first 3 represents --- users category --- rw- (users can read the data, can write the data, cannot execute)
+2nd 3 represents --- group category --- r-- (group can read the data, cannot write the data, cannot execute)
+3rd 3 represents --- others category --- r-- (other can read the data, cannot write the data, cannot execute)
+
+
+Shell Scripting Videos: https://youtube.com/playlist?list=PLs-PsDpuAuTeT2iRQpNs0sl-sXFD10I1C&si=HT0jqAye8SUMpdRx
+Shell Scripting repo: https://github.com/KastroVKiran/ShellScriptingforDevOpsEngineering.git
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
