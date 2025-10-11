@@ -1,0 +1,45 @@
+(Day 07) 10-10-2025
+~~~~~~~~~~~~~~~~~
+Git and GitHub - Day 01 
+~~~~~~~~~~~~~~~~~
+=> Configuration in GIT
+To track the changes made by the user(s), we will configure username and email in git
+
+git config --global user.name "<UserName>"
+git config --global user.email "<UserEmail>"
+
+git config user.name
+git config user.email
+
+To see the list of configurations
+git config --list
+
+# Configuration is one time activity
+
+# All git commands will start with "git"
+
+Git Workflow;
+1. Create empty directory
+2. Initialize git
+3. Create file(s)
+4. Add to the staging area
+5. Check the status
+6. Commit the file to local repo area
+7. Check the status
+
+
+git add <FileName>
+git status
+git commit -m <Commit_Message>
+
+
+
+
+
+
+
+
+
+
+
+
