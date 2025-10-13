@@ -1,0 +1,101 @@
+(Day 06) 09-10-2025
+~~~~~~~~~~~~~~~~~
+Linux - Day 04 
+~~~~~~~~~~~~~~~~~
+Users, Groups, Others
+Read, Write, Execute
+chmod
+
+File permissions using numbers;
+0		- no permissions
+1		- execute
+2		- write
+3		- 2 + 1	- write + execute
+4		- read
+5 		- 4 + 1	- read + execute
+6		- 4 + 2	- read + write
+7		- 6 + 1	- read + write + execute
+
+chmod ugo+x
+chmod 111 
+
+chmod ugo+w
+chmod 222
+
+u+r g+rx o+rw
+chmod 456
+
+u-rwx g-rwx o+rwx
+chmod 7 
+
+Note: When you give only 1 number, the file permissions will change from right side to left side
+Note: When you give only 2 number, the file permissions will change from right side to left side
+Note: When you give only 3 number, the file permissions will change from left side to right side
+
+
+---r-x--x
+chmod 20
+
+
+User Management in Linux
+ec2-user	- less privileges
+root - all permissions
+
+Note: For every user we create, a 'home' directory will be available based on the username
+kastro ---> Dir. - kastro
+
+
+To create user
+sudo useradd <UserName>
+id <UserName>
+
+To see the list of users
+cat /etc/passwd
+
+To see the list of groups
+cat /etc/group
+
+To add users to a group
+
+=> Package Managers in Linux
+package means a software
+package managers are specific to Linux distributions
+
+Amazon Linux	----> yum (Yellowdog Updater, Modifier)
+Ubuntu			----> apt (Advanced Packaging Tool)
+rpm - RedHat Package Manager
+dnf - Dandified yum
+dpkg - Debian Package Management System
+
+=> Networking Commands
+ping - to check the connectivity
+curl - is used to send http request to url
+wget - to download files from internet
+
+=> systemctl
+sytemctl is used to manage services in Linux machines
+using systemctl we can perform below commands;
+	start a service
+	stop a service
+	restart a service
+
+=> chown
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
