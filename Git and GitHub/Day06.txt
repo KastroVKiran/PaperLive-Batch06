@@ -1,0 +1,70 @@
+(Day 08) 13-10-2025
+~~~~~~~~~~~~~~~~~
+Git and GitHub - Day 02 
+~~~~~~~~~~~~~~~~~
+=> To see the commit history
+git log
+git log --oneline
+git log -2
+git log --oneline -2
+git show ----> To see the changes made in the latest commit
+git show <CommitID> ----> To see teh changes made in any specific commit
+git log --stat ----> to see the summary of the changes made in all the commits
+git log --pretty=oneline
+git log --pretty=format:"%h-%an, %ar:%s"
+git log --oneline --author="Kastro Kiran V" ----> To see the commits made by a specific author
+git blame kastro.txt ----> To see the changes made to a specific file
+
+=> GIT DIFF
+git diff is a command which is used to show the changes between different states/stages of your repo
+Scenario 1: To see the changes exist in your working directory compared to the staging area 
+				git diff
+
+Scenario 2: To see what is staged but not yet commited
+				git diff --staged (or) git diff --cached
+
+Scenario 3: To see the changes between any two commits
+				git diff <CommitID1> <CommitID2> 
+
+Scenario 4: To see differences between branches
+				git diff <Branch1> <Branch2>
+
+Scenario 5: To see the differences which are made to a specific file
+				git diff <FileName>
+
+Demo 1 - Working Tree Vs Staging Area
+git diff
+
+Demo 2 - Staging Area Vs Local repo
+git diff --staged (or) git diff --cached
+
+Demo 3: Working Tree Vs Local Repo
+git diff HEAD
+
+=> Changing the Commit Message
+To change the latest commit message
+git commit --amend -m "fixed: small bug"
+
+To change the last commit message
+git rebase -i --root
+
+To change the specific commit message**
+git rebase -i HEAD~2
+
+=> GIT STASH
+11.00 AM ---> TL ---> create a file, added python code in the file, add to staging area, commit it
+11.30 AM ---> TL ---> create another new file called Netflix.java, add to staging area, commit it
+
+We should never add, commit and push the partially completed work
+We shouldn't delete the file as well
+We have to add the partially completed work in a temporary location which is available in the .git folder ----> git stash <FileName>
+
+=> Creating a GitHub Account
+https://github.com/
+
+
+
+
+
+
+
