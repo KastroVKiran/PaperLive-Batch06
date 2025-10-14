@@ -1,4 +1,6 @@
 (Day 06) 09-10-2025
+
+This is a demo file
 ~~~~~~~~~~~~~~~~~
 Linux - Day 04 
 ~~~~~~~~~~~~~~~~~
@@ -80,6 +82,7 @@ using systemctl we can perform below commands;
 	restart a service
 
 => chown
+
 
 
 
