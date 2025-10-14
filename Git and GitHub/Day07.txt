@@ -1,0 +1,75 @@
+(Day 09) 14-10-2025
+~~~~~~~~~~~~~~~~~
+Git and GitHub - Day 03 
+~~~~~~~~~~~~~~~~~
+Introduction to GitHub
+Repositories - Types
+Creation of Repositories
+Branches
+
+GitHub is used to store the source code of the application
+GitHub is a cloud based server
+We need to signup to the GitHub account
+GitHub is available for free and also premium 
+
+Repositories;
+Repo is nothing but a folder
+
+Types of repos;
+1. Public Repo	- which is accessible to everyone
+2. Private Repo	- which is not accessible to everyone
+
+For every repo that we create, we will get an Unique Repo URL
+	1. HTTPS
+	2. SSH
+
+=> Pushing the code from local to remote repo
+git push
+
+=> Pulling the code from remote to local repo
+git clone <Repo URL> ----> Whatever code that is there in the remote repo, that entire code will be available into your local
+
+=> Forking a repo
+Kastro (Ingress Project) ---> Sumit (Forked the repo)
+Whenever kastro makes the changes in the repo, sumit will be able to get the changes. This is because Sumit has forked the repo which is owned by Kastro
+Note: If sumit does any changes in the forked repo, those changes will not be available for kastro. because the owner of the repo is kastro
+
+But, if Rizwan forks the same repo from Sumit account, then whenever Sumit does the changes in his repo, Rizwan will be able to get those changes
+
+Kastro	----> Sumit 	----> Rizwan
+v1		----> sync (v1)	----> sync (v1)
+
+=> Branches
+Branches helps us to isolate the code from different features available for the application
+
+Note:
+Whenever we switch from existing branch to the newly created branch, whatever code that is available in the existing branch that entire code by default comes into the newly created branch
+
+=> .gitignore
+
+=> Renaming a branch
+=> Deleting a branch in remote and local
+git branch -D <BranchMovie> ---> Local deletion
+
+=> Pull Request
+Merging of branches in the remote repo directly is known as Pull Request
+Branch 1 ----> Branch 2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
