@@ -1,6 +1,6 @@
 (Day 05) 07-10-2025
 ~~~~~~~~~~~~~~~~~
-Linux - Day 03
+Linux - Day 03 - Day 03
 ~~~~~~~~~~~~~~~~~
 Default landing commands;
 sudo su
