@@ -1,0 +1,52 @@
+(Day 10) 16-10-2025
+~~~~~~~~~~~~~~~~~
+Git and GitHub - Day 04 
+~~~~~~~~~~~~~~~~~
+Branches
+~~~~~~~~~~
+=> Branch Merging
+git merge <branch-name>
+
+=> Merge Conflicts;
+Dev 1 - Branch 1 - code.txt - Java code
+Dev 2 - Branch 2 - code.txt - Python code
+
+Note: Resolving the conflicts is manual task
+
+=> Cherry Pick
+To get a specific file or specific type of files, we will use cherry pick concept
+
+=> git pull
+To get the changes from the remote repo to the local, we will use git pull
+
+=> Collaborators in Git
+
+=> Roll Back using Git
+71caba6 (HEAD -> master) version3 added	-----> Version1, Version2, Version3
+e8d28df added version2						-----> Version1, Version2
+b17cd0e versio1 code						-----> Version1
+
+=> Recovering a deleted file
+Scenario 1: If you remember the file name (deleted the file, not staged yet)
+
+Scenario 2: Deleted and staged
+
+Scenario 3: Deleted, Staged, Committed
+
+Scenario 4: Deleted, Staged, Committed, Pushed
+git log --diff-filter=D -- <FileName>
+git revert <CommitID>
+git push
+
+Scenario 5: If you don't know the file name
+
+git restore --source <commitid-where-the-file-is-available> -- /<filename>
+
+
+
+
+
+
+
+
+
