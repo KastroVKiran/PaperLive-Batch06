@@ -1,0 +1,191 @@
+(Day 11) 17-10-2025
+~~~~~~~~~~~~~~~~~
+Maven 
+~~~~~~~~~~~~~~~~~
+Maven is a build tool that is used to create the initial project folder structure to develop the source code of the application.
+Based on the programming language, the build tools will change;
+	Java			----> Maven
+	Python		----> PyBuilder
+	Ruby		----> Rakes
+	.net			----> MS Build
+In a project, developers will write the source code of the app, that source code should be compiled before execution, that compilation of project we will do using MAVEN
+Maven is used for the projects which are developed by using JPL
+Maven is also called as Java Build Tool
+Maven is an open-source s/w and it is available for free of cost
+
+Features of using Maven;
+1. Using Maven we can create the initial project folder structure
+
+2. Using Maven we can download the "dependencies" that are required to develop a project
+
+Biryani	-----> Chicken (main)	-----> Rice, Flavour.... (additional)
+Netflix	-----> Java (main)		-----> Other tools (Spring, SpringBoot...) - Dependencies
+
+Maven will download the dependencies by using a file which is known as "pom.xml" file
+POM - Project Object Model
+XML - Extension Markup Language
+Using pom.xml file we are going to configure the dependencies that are required for the project
+https://mvnrepository.com/
+
+3. Using Maven we can compile the source code of the application
+All the java files will have .java as the extension ".java"
+.java files consists of source code of the application, which is available in the form of human readable language
+Before executing the code, we have to convert the human understandable language into the machine understandable language (binary code)
+The process of converting the human understandable language into the machine understandable language is known as COMPILATION
+Using maven we will do the compilation
+When we compile the .java files, they will be converted into .class files
+Once we get the .class files we can execute the code and we can see the output
+To see the output of the code, we need JVM (any machine that has java installed)
+
+		    compile					execute
+.java	-------------------------> .class	------------------------> JVM		-------------------> Output
+
+4. When we have multiple .java files, using maven we can package all the .java file. Once after packaging, we can directly compile them using maven
+In realtime, using java we can develop two major types of applications;
+	1. Standalone Applications
+	2. Web Applications
+	3. Enterprise Applications
+Based on the type of application, the packaging will get differ;
+	1. Standalone Applications		-----> jar file (Java Archive)
+	2. Web Applications			-----> war file (Web Archive)
+	3. Enterprise Applications		-----> ear file (Enterprise Archive)
+
+Normal Java Application	----> war files
+SB Java Applications		----> jar files
+
+Introduction to Maven;
+Maven is developed by using Java Programming Language
+All java based projects require maven as build tool
+maven is developed by Apache Organization 
+
+How DevOps Engineers work with Maven?
+Using Maven we have to compile
+Using Maven we have to package 
+Once we package the code we will get artifacts (jar, war)
+These artifacts we have to deploy in the servers
+
+Configuring Java and Maven;
+JAVA_HOME
+JAVA_PATH
+
+MAVEN_HOME
+MAVEN_PATH
+
+=> How to create a standalone Applications;
+To create the initial folder structure for a standalone application (Java application) using Maven, you can use the following command:
+mvn archetype:generate -DgroupId=com.Paperlive.app -DartifactId=my-standalone-app -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+
+🔍 Explanation:
+Option	Description
+mvn archetype:generate	Tells Maven to create a new project from an archetype (a project template).
+-DgroupId=com.example.app	The package name / unique group identifier (you can change it).
+-DartifactId=my-standalone-app	The name of your project folder.
+-DarchetypeArtifactId=maven-archetype-quickstart	The built-in Maven archetype for a simple Java project.
+-DinteractiveMode=false	Skips the interactive prompts (non-interactive mode).
+
+
+=> To create the initial folder structure for a web application using Maven, you can use the following command:
+mvn archetype:generate -DgroupId=com.example.webapp -DartifactId=my-web-app -DarchetypeArtifactId=maven-archetype-webapp -DinteractiveMode=false
+
+=> How to configure the dependencies in the pom.xml file
+
+=> Maven Goals/Lifecycle
+All maven goals start with "mvn"
+1. Compile (.java ----> .class)
+mvn compile****
+
+2. Test - to perform unit test execution
+mvn test
+
+3. Package - to package the project as a jar or war file
+mvn package****
+
+4. Install - to install the project as dependency in the local repo
+mvn install
+
+5. To clean the "target" folder
+mvn clean****
+
+mvn compile/mvn package -----> Target
+						-----> mvn compile -----> Inside the target folder, we will have .class files
+						----> mvn package ----->  Inside the target folder, we will have the artifacts
+
+Note: All maven goals should be executed in the path where we see "pom.xml" file
+
+Note: mvn clean package
+
+Note: All the artifacts we will store in artifact repo tools - Nexus and JFrog
+
+=> Maven Repositories
+Types of Maven Repositories;
+	1. Local Repo			- available in the local system (.m2 folder) (c drive/users/<UserName>/.m2 folder
+	2. Central Repo		- mvnrepository.com
+	3. Remote Repo		- every organization will maintain their own repos (Nexus/JFrog)
+
+=> How maven will download the dependencies?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
