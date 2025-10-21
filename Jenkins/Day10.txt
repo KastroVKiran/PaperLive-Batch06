@@ -1,0 +1,183 @@
+(Day 12) 20-10-2025
+~~~~~~~~~~~~~~~~~
+Tomcat
+~~~~~~~~~~~~~~~~~
+Deployment types;
+	1. Manual Deployment
+	2. Automated Deployment
+
+In order to deploy any applications, we need a server (AWS - EC2 Instance).
+If we want to deploy a java based web application, for this we need web/app servers.
+The web/app server which is available to deploy the java based web applications is known as Apache Tomcat
+
+Web Server - handles the HTTP requests from clients and serves static content
+			- Apache HTTP, Nginx, Caddy, Microsoft IIS....
+App Server - handles the business logic and serves the dynamic content by running server-side code
+			- Apache Tomcat, JBoss, ...
+
+Developers 	----> Code testing	-----> Developers will keep the code in the GitHub repo.		-----> As a DevOps Engineer, we have to take the code from Gthub Repo	----> Then we need to deploy the code into the servers
+
+To deploy Java Application, we prefer Apache Tomcat, JBoss, WebLogic, WebSphere....
+
+Java Code	-----> .java file(s)	-----> .class file(s)	----> package	----> Artifacts (jar/war)		----> Deploy the war 	----> Access the app
+
+Tomcat is an o/s s/w and it is available for FREE
+Tomcat will run on Port Number 8080
+EC2 Instance 		-----> Installed Tomcat		-----> To access Tomcat Homepage, open port number 8080 in the SG of EC2 Instance
+
+Current versions;
+Tomcat 9**
+Tomcat 10
+Tomcat 11
+
+Folder Structure of Tomcat;
+BIN			- Binaries - it contains the files to start and stop the tomcat server
+						- .sh files --- used for Linux OS	--- startup.sh, shutdown.sh
+						- .bat files --- used for Windows OS 	--- startup.bat, shutdown.bat
+
+CONF		- Configuration - it contains tomcat configuration files
+							- server.xml --- to configure the tomcat port number
+							- tomcat-users.xml --- to configure the user details
+
+LIB			- Libraries - it contains libraries (jar files)
+LOGS		- contains the server logs
+TEMP		- temporary data
+WEBAPPS	- 'Deployment' folder - in this folder we will keep the application war files
+
+To work with Tomcat, we need to install Java 17, 21, 24
+To work with Maven, we need to install Java 17, 21, 24
+
+
+sudo dnf install java-17-amazon-corretto -y
+
+context.xml file	-----> webapps/manager/META-INF
+						Edit the allow tag	----> ".*"
+
+tomcat-user.xml ----> 
+<role rolename="manager-gui" />
+<user username="tomcat" password="tomcat" roles="manager-gui" />
+<role rolename="admin-gui" />  
+<user username="admin" password="admin" roles="manager-gui,admin-gui"/>
+
+-------------------
+https://github.com/KastroVKiran/tomcat-app-kastro.git
+
+clone the code to local
+execute maven goals ----> mvn clean package ----> Deploy the war file into the tomcat server
+
+Developer has updated the code ----> Push the updated code to the repo	----> As a DevOps Engineer, we need to clone the code ----> package the code ---->
+deploy into the tomcat -----> Repetitive process
+
+This is manual process
+
+To automate the build and deployment process, we will use CI & CD tools
+CI & CD Tool - Jenkins
+
+
+~~~~~~~~~~~~~~~~~~~
+JENKINS
+~~~~~~~~~~~~~~~~~~~
+Manual Deployment ----> git checkout, compile the code, package the code, artifact, deploy into the servers
+
+CI & CD is an automation process to build and deploy the applications
+
+CI - Continuous Integration
+		Hotstar	----> Version1		-----> Test the code		----> Build the code
+		Hotstar	----> Version2		-----> Test the code		----> Build the code
+		Hotstar	----> Version3		-----> Test the code		----> Build the code
+CI is combination of Continuous Test and Continuous Build
+
+CD - Continuous Delivery
+		If you are deploying the artifact "manually" into the servers, then it is known as Continuous Delivery
+
+CD - Continuous Deployment
+		The process of automating the deployment of the artifact into the servers is known as Continuous Deployment
+
+CI & CD -----> Continuous Integration + Continuous Deployment
+
+CI &CD Tools --- Jenkins, GitHub Actions, GitLab, CircleCI, AWS Code Pipeline (Platform Dependent)
+
+Stages in CI & CD
+Git Checkout			--- get the code from the repo
+Build the code		--- to generate the artifacts
+Store the artifacts		--- Nexus, JFrog, S3
+Code Quality Analysis	--- SonarQube 
+Security Tools		--- Trivy, OWASP, Docker Scout Image Analysis
+Deploy				--- Tomcat/Docker/Kubernetes Cluster
+
+Jenkins is a CI & CD tool
+Using Jenkins, we can automate the build and deployment process
+If you want to work with Jenkins, we need to install Java (17/21/24)
+Jenkins is developed by using JPL
+Jenkins will run on default port number which is 8080
+
+Jenkins Installation Commands;
+sudo dnf update -y
+sudo dnf install java-17-amazon-corretto-devel -y
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+sudo dnf install jenkins -y
+sudo systemctl daemon-reload
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+
+~~~~~~~~~~~~~
+Jenkins Jobs
+~~~~~~~~~~~~~
+Job is nothing but a task
+
+Types of Jobs;
+	1. Freestyle Project	- we will configure the job information using the UI of Jenkins
+	2. Pipeline			- we will configure the job information using Scripts (Declarative/Groovy)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
