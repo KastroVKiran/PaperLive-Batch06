@@ -1,0 +1,163 @@
+(Day 13) 23-10-2025
+~~~~~~~~~~~~~~~~~
+Jenkins
+~~~~~~~~~~~~~~~~~
+
+Tomcat - Manual Deployment
+
+
+https://github.com/KastroVKiran/tomcat-app-kastro.git
+
+
+sudo dnf update -y
+sudo dnf install java-17-amazon-corretto-devel -y
+
+==>Edit the content in context.xml file of below path;
+
+cd apache-tomcat-9.0.111/webapps/manager/META-INF ----> vi context.xml ----> Remove the entire content and paste the below content ---->
+
+<Context antiResourceLocking="false" privileged="true">
+  <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+         allow="^.*$" />
+</Context>
+
+==>Edit the content in context.xml file of below path;
+
+cd apache-tomcat-9.0.111/webapps/host-manager/META-INF ----> vi context.xml ----> Remove the entire content and paste the below content ---->
+
+<Context antiResourceLocking="false" privileged="true">
+  <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+         allow="^.*$" />
+</Context>
+
+==> Edit the content in "tomcat-users.xml" file of below path;
+
+cd apache-tomcat-9.0.111/conf ----> vi tomcat-users.xml ----> Remove the entire content and paste the below content ---->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<tomcat-users xmlns="http://tomcat.apache.org/xml"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://tomcat.apache.org/xml tomcat-users.xsd"
+              version="1.0">
+
+  <role rolename="manager-gui"/>
+  <role rolename="admin-gui"/>
+  <user username="tomcat" password="tomcat" roles="manager-gui"/>
+  <user username="admin" password="admin" roles="manager-gui,admin-gui"/>
+
+</tomcat-users>
+==================================================================================
+To automate the Build and Deployment process we will use CI & CD tools.
+One of the most popular CI & CD tools is Jenkins
+
+~~~~~~~~~~
+Jenkins Jobs
+~~~~~~~~~~
+Types of Jobs;
+1. Freestyle				- UI of jenkins
+2. Pipeline				- Script
+3. Multi branch Pipeline	- Script
+
+~~~~~~~~~~~~~~~~~~~~~~~
+Exploring Freestyle Projects
+~~~~~~~~~~~~~~~~~~~~~~~
+We will have 6 options to configure a Jenkins job which is created using Freestyle Projects;
+	1. General
+	2. SCM (Source Code Management)
+	3. Triggers
+	4. Environment
+	5. Build Steps
+	6. Post Build Actions
+
+Job1 - Basic configuration - Exploring the "Build Now" and "Console Output" options
+
+Job2 - Build Steps - Execute shell commands
+		- Create a file in a specific location and to write the content inside the file using Jenkins
+
+Job3 - Running the existing file using Jenkins job
+
+Job 4 - Task - Create a shell file with apache/nginx installation
+		- Port number 80
+
+Job 5 - General - This project is parameterized 
+Parameters are used to pass the variables in the key-value format during the build process
+String Parameter
+Choice Parameter
+
+(a) String Parameter
+
+(b) Choice Parameter
+
+Job 6 - Task
+Create the job with three parameters and the output should be seen with below options;
+	Parameter 1: User has to give a Name			- string
+	Parameter 2: User has to select the Gender		- choice
+	Parameter 3: User has to enter their Role		- string
+
+Job 7 - General - Throttle Builds
+If i want to restrict the number of builds to happen in a specific time, then we will use "Throttle Build"
+Ex: 1 hour - 2 builds
+	2 hours - 10 builds
+
+Job 8 - Integrating Public GitHub repo
+
+Job 9 - Integrating Public GitHub repo and Building the Code
+		using "invoke top level maven targets"
+
+Job 10 - Build Triggers - Build Periodically
+To trigger a job based on time stamp, we will use CRON expression
+
+* * * * *	----> Every minute the job will get executed
+H * * * * ----> Every one hour the job will get executed
+H/2 * * * * ----> Every half hour the job will get executed
+
+Build Periodically will execute the job without considering whether the changes are made in the GitHub repo or not
+
+Job 11 - Build Triggers - Poll SCM
+To trigger a job based on time stamp, we will use CRON expression
+Poll SCM will look after the changes made in the GitHub repo every minute, and if there is any change, then only Jenkins will trigger the job
+
+Note: We have to wait for atleast 1 minute to have the job executed
+
+Job 12 - Build Triggers - GitHub Hook Trigger for GIT SCM Polling
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
