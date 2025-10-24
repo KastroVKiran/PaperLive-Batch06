@@ -1,0 +1,152 @@
+(Day 14) 24-10-2025
+~~~~~~~~~~~~~~~~~
+Jenkins
+~~~~~~~~~~~~~~~~~
+Jenkins Setup
+sudo dnf update -y
+sudo dnf install java-17-amazon-corretto-devel -y
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+sudo dnf install jenkins -y
+sudo systemctl daemon-reload
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+
+===> What does jenkins used to manage the fingerprint of a file?
+
+Job 13 - Build Triggers - Build after other projects are built (Upstream and Downstream Jobs)
+Job1		- configure	- manually click on build now - success
+Job2		- configure	- trigger this job, if the job1 is successfully built
+Job3		- configure	- trigger this job, if the job2 is successfully built
+
+The execution of one job is dependent on the successful execution of previous job
+
+Job 1	- Dev	- Success		- no upstream jobs, job2 is the d/s
+Job 2	- Pilot	- Success		- job1 is the u/s, job3 is the d/s
+Job 3 	- Prod	- Success		- job2 is the u/s, no d/s jobs
+
+Note: Atleast once the jobs should be built
+
+Job 14 - Build Triggers - Trigger jobs remotely
+
+Jenkins Admin	----> All permissions
+Jenkins Users		----> Create and Configure the job
+
+Token - kastro
+
+JENKINS_URL/job/remote-trigger-demo/build?token=TOKEN_NAME
+
+http://98.93.47.91:8080/job/remote-trigger-demo/build?token=kastro
+
+Job 15 - Freestyle Project 1 - Automate the Build and Deployment Process
+
+
+https://github.com/KastroVKiran/tomcat-app-kastro.git
+
+Tomcat Configuration
+==>Edit the content in context.xml file of below path;
+
+cd apache-tomcat-9.0.111/webapps/manager/META-INF ----> vi context.xml ----> Remove the entire content and paste the below content ---->
+
+<Context antiResourceLocking="false" privileged="true">
+  <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+         allow="^.*$" />
+</Context>
+
+==>Edit the content in context.xml file of below path;
+
+cd apache-tomcat-9.0.111/webapps/host-manager/META-INF ----> vi context.xml ----> Remove the entire content and paste the below content ---->
+
+<Context antiResourceLocking="false" privileged="true">
+  <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+         allow="^.*$" />
+</Context>
+
+==> Edit the content in "tomcat-users.xml" file of below path;
+
+cd apache-tomcat-9.0.111/conf ----> vi tomcat-users.xml ----> Remove the entire content and paste the below content ---->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<tomcat-users xmlns="http://tomcat.apache.org/xml"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://tomcat.apache.org/xml tomcat-users.xsd"
+              version="1.0">
+
+  <role rolename="manager-gui"/>
+  <role rolename="admin-gui"/>
+  <user username="tomcat" password="tomcat" roles="manager-gui"/>
+  <user username="admin" password="admin" roles="manager-gui,admin-gui"/>
+
+</tomcat-users>
+==================================================================================
+Job 16 - Storing the Artifacts
+
+Artifact Repository Tools - Nexus and JFrog, AWS - Simple Storage Service (S3)
+
+S3 ----> Bucket ----> Enable "Versioning" 
+Versioning helps to store the multiple versions of the same file
+
+Plugin - S3 Publisher
+
+Jenkins cannot directly connect with AWS Cloud
+To connect AWS Cloud with Jenkins, we need to create IAM Role or IAM User
+For the role or user created, we need to attach IAM Policy which is related to S3 Access
+
+
+Job 17 - Build Executor Status
+0/2 represents how many number of builds we can run parallelly
+
+
+Job 18 - Changing the Port Number of Jenkins
+cd /usr/lib/systemd/system ----> edit "Jenkins.service" file ----> Environment="JENKINS_PORT=8080"
+
+Restart Jenkins -----> sudo systemctl restart jenkins
+
+Open the port number in the SG of the VM ----> <PublicIP>:<NewPortNumber>	-----> Username and Password --->Jenkins is accessible on new port number
+
+SonarQube ----> https://www.youtube.com/watch?v=ScdedztTaAU&list=PLs-PsDpuAuTfG3gFR5DnVD58kT7JBO97x&index=8&t=3s&pp=iAQB
+Nexus	----> https://www.youtube.com/watch?v=opJAfDOCZuI&list=PLs-PsDpuAuTfG3gFR5DnVD58kT7JBO97x&index=9&t=5615s&pp=iAQB
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
