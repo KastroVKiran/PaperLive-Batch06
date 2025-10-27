@@ -1,0 +1,193 @@
+(Day 15) 27-10-2025
+~~~~~~~~~~~~~~~~~
+Jenkins
+~~~~~~~~~~~~~~~~~
+Jenkins Setup
+sudo dnf update -y
+sudo dnf install java-17-amazon-corretto-devel -y
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+sudo dnf install jenkins -y
+sudo systemctl daemon-reload
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+
+Job 19 - Configuration of Private GitHub Repo with Jenkins
+
+Create PAT
+
+Job 20 - Restoring the deleted jobs
+
+Install a plugin - Job Configuration History
+
+Note: Recovery of deleted jobs is possible for the jobs which are created and built after installing the "Job Config History" plugin
+
+Additional Plugin: Thin Backup
+
+Note: We can also take a snapshot of AMI (Backup of EC2 Instance)
+
+Job 21 - Jenkins + GitHub + Maven + Tomcat + Store the artifact in S3 Bucket (Freestyle Project) - Task
+
+Repo URL:https://github.com/KastroVKiran/tomcat-app-kastro.git
+
+~~~~~~~~~~~~~~~~~
+PIPELINE
+~~~~~~~~~~~~~~~~~
+In Jenkins, we have created the jobs using Freestyle Projects i.e by using Jenkins UI
+We can also create Jenkins job using Jenkins Pipeline Concept
+
+What is meant by a Pipeline?
+Pipeline is a sequential execution of different stages available in a job
+Pipeline as a Code (PaaC)
+Jenkins is a platform where we are going to run the entire code as a pipeline
+
+Deployment of App;
+Take the code / git checkout (Stage 1)	-----> Building of code (Stage 2)	-----> Storing of artifact (Stage 3)	-----> Code Quality analysis (Stage 4)	-----> Deployment (Stage 5)
+	Step 1: Clone the repo						Step 1: mvn clean				Step 1: S3 Bucket				Step 1: SonarQube				Step 1: Tomcat Deployment
+											Step 2: mvn compile			Step 2: Nexus Repo											Step 2: Docker
+											Step 3: mvn package																		Step 3: Docker Compose
+																																	Step 4: Docker Swarm
+																																	Step 5: K8s Cluster
+
+Jenkins Pipeline consists of multiple stages
+Each stage may contain multiple steps
+
+Jenkinsfile	---- Jenkinsfile consists of the pipeline execution process
+Note: Jenkinsfile will be stored in the GitHub repo of the project
+
+Types of writing the Jenkinsfile;
+1. Declarative
+2. Scripted
+
+Declarative;
+	1. Recent and advanced style of writing a pipeline script
+	2. Predefined structure
+	3. East to read and manage
+
+Scripted;
+	1. Groovy language
+	2. DSL - Domain Specific Language
+	3. Hard to read and manage
+
+
+Note:
+PASS
+P - pipeline
+A - agent - any
+S - stage(s)
+S - step(s)
+
+
+
+pipeline {
+    agent any
+
+    stages {
+        stage('git checkout') {
+            steps {
+                echo 'get the code from github repo'
+            }
+        }
+        stage('maven clean') {
+            steps {
+                echo 'delete the target folder'
+            }
+        }
+        stage('maven packaging') {
+            steps {
+                echo 'generating the artifact'
+            }
+        }
+        stage('artifact storing') {
+            steps {
+                echo 'storing the artifact'
+            }
+        }
+    }
+}
+
+Job 22 - Pipeline Project (Netflix Clone Application)
+Jenkins + GitHub + Maven + Tomcat
+
+Plugins to be installed;
+	1. Deploy to container
+	2. Pipeline stage view
+
+Installations on VM;
+	1. git
+	2. maven
+	3. tomcat
+	4. Jenkins
+	5. java 21
+
+Repo URL: https://github.com/KastroVKiran/Netflix-Pipeline-Project.git
+
+Stage 1 - git checkout
+Stage 2 - maven build and package
+Stage 3 - deploy to tomcat
+
+Pipeline;
+pipeline {
+    agent any
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git 'https://github.com/KastroVKiran/Netflix-Pipeline-Project.git'
+            }
+        }
+        stage('Maven Clean') {
+            steps {
+                sh 'mvn clean'
+            }
+        }
+        stage('Maven Compile') {
+            steps {
+                sh 'mvn compile -T 1C -DskipTests'
+            }
+        }
+        stage('Maven Package') {
+            steps {
+                sh 'mvn package -T 1C -DskipTests'
+            }
+        }
+        stage('Deployment to Tomcat') {
+            steps {
+                sh 'sudo cp target/NETFLIX-1.2.2.war /root/apache-tomcat-9.0.111/webapps'
+            }
+        }
+    }
+}
+
+Job 23 - Multibranch Pipeline
+Movies				- branch 1	- Jenkinsfile
+Documentaries		- branch 2	- Jenkinsfile
+Sci-fi				- branch 3	- Jenkinsfile
+
+https://github.com/KastroVKiran/Multi-Branch-Pipeline.git
+
+Pending;
+Jenkins Master and Slave
+Jenkins RBAC
+Jenkins Final Project - Hotstar
+
+Tasks;
+SonarQube ----> https://www.youtube.com/watch?v=ScdedztTaAU&list=PLs-PsDpuAuTfG3gFR5DnVD58kT7JBO97x&index=8&t=3s&pp=iAQB
+Nexus	----> https://www.youtube.com/watch?v=opJAfDOCZuI&list=PLs-PsDpuAuTfG3gFR5DnVD58kT7JBO97x&index=9&t=5615s&pp=iAQB
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
