@@ -1,0 +1,90 @@
+(Day 16) 30-10-2025
+~~~~~~~~~~~~~~~~~
+Jenkins
+~~~~~~~~~~~~~~~~~
+Jenkins Setup
+sudo dnf update -y
+sudo dnf install java-17-amazon-corretto-devel -y
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+sudo dnf install jenkins -y
+sudo systemctl daemon-reload
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+
+Jenkins Master and Slave Architecture;
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+VM ----> Jenkins ----> Creating Jobs ----> Building the Jobs ----> All our job information is being stored on the EC2 instance where Jenkins is running (/var/lib/jenkins/workspace)
+
+Final Script;
+pipeline {
+    agent {
+        label 'node1'
+    }
+
+    stages {
+        stage('git checkout') {
+            steps {
+                git 'https://github.com/KastroVKiran/Hotstar-App.git'
+            }
+        }
+        stage('maven clean') {
+            steps {
+                sh 'mvn clean'
+            }
+        }
+        stage('maven compile') {
+            steps {
+                sh 'mvn compile'
+            }
+        }
+        stage('maven package') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+        stage('tomcat deployment') {
+            steps {
+                deploy adapters: [tomcat9(alternativeDeploymentContext: '', credentialsId: 'tomcat-creds', path: '', url: 'http://54.242.132.154:8080/')], contextPath: 'hotstar-app', war: '**/*.war'
+            }
+        }
+    }
+}
+
+
+RBAC
+~~~~~~~~~~~~~~~~~~~
+RBAC - Roll Based Access Control
+
+AWS ----> IAM (Similar to RBAC)
+
+DevOps Team ---- Team Leader - All permissions
+Team Member 1 --- Intern	-- least permissions
+Team Member 2 --- 3 YOE
+Team Member 3 --- 5 YOE
+
+Create Users ----> Configure the permissions
+Create Groups ----> Add Users ----> Configure the permissions to a group
+
+Note: By default, when we create new users in Jenkins, that new user(s) will have administrator permissions
+
+ajay
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
