@@ -1,0 +1,40 @@
+(Day 18) 02-11-2025
+~~~~~~~~~~~~~~~~~
+Docker
+~~~~~~~~~~~~~~~~~
+
+Docker installation on Amazon Linux 2023
+    sudo dnf update -y
+    sudo dnf install -y docker
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    sudo usermod -aG docker $USER (Optional)
+    docker --version
+
+To see the list of images
+docker images
+
+To see the list of containers
+docker ps		--- will list the running containers only
+docker ps -a		--- will list the running containers and stopped containers
+
+To pull an image
+docker pull <ImageName>
+
+To create a container and to go inside a container
+docker run -it --name <ContainerName> <ImageName>
+
+-it ----> Interactive Terminal
+
+You are now inside the container	
+
+To exit from the container
+1. control + p + q
+2. control + d
+
+To create a container but i dont want to go inside a container
+docker run -it -d --name <ContainerName> <ImageName>   (OR) docker run -itd --name <ContainerName> <ImageName>
+
+To login/go inside a container
+Method 1: docker attach <ContainerName>
+Method 2: docker exec -it <ContainerName> /bin/bash
