@@ -1,0 +1,162 @@
+(Day 19) 03-11-2025
+~~~~~~~~~~~~~~~~~
+Docker
+~~~~~~~~~~~~~~~~~
+
+Docker installation on Amazon Linux 2023
+    sudo dnf update -y
+    sudo dnf install -y docker
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    sudo usermod -aG docker $USER (Optional)
+    docker --version
+
+docker stop 213bf24ec8bd
+docker start 213bf24ec8bd
+docker restart 213bf24ec8bd
+
+docker pause 213bf24ec8bd
+docker unpause 213bf24ec8bd
+
+docker inspect 213bf24ec8bd
+
+docker kill 213bf24ec8bd
+
+kill vs stop
+kill will forcely kills all the process which are running inside the container - this is dangerous
+stop will stop all the process smoothly and then it is will be stopped - this is recommended
+
+docker rm 213bf24ec8bd
+docker rm -f 3c9db3bdccec
+
+unused images are also known as DANGLING IMAGES
+docker rmi ubuntu
+
+docker logs 3c9db3bdccec
+
+docker top 3c9db3bdccec
+
+docker rename ubuntucont ucontainer
+
+docker system prune -a
+
+1. Pulled the image
+2. Created the container using the image
+3. Login to the container
+4. Installed the packages
+5. Exited from the container
+
+DOCKERFILE
+Dockerfile has the instructions which are required to run a container
+Dockerfile will have components
+DSL keywords
+All the components will be presented in CAPITAL LETTERS
+Default name for Dockerfile is "Dockerfile"
+Dockerfile is used to create custom images for our application
+
+Docker workflow
+Dockerfile	-----> Build image from the Dockerfile	-----> Docker image-----> Run the container using the image ----> Docker container
+
+FROM
+It is used to setup the base image for our container
+It indicates the base image to run our application
+On top of base image, we will create our own images
+This is the first instruction we will find inside any Dockerfile
+We can have multiple base images
+Every new base image should be configured in a new line
+
+FROM ubuntu
+FROM amazonlinux
+FROM tomcat
+FROM mysql
+
+RUN
+It is used to execute the commands "while creating the docker image"
+RUN command instructions will execute while creating the image
+We can write multiple RUN instructions
+All the instructions will be processed by the docker engine from TOP to BOTTOM
+
+RUN touch kastro.txt
+RUN mkdir kastro
+RUN yum install git -y
+RUN yum install maven -y
+RUN git clone <Repo.URL>
+
+CMD
+It is also used to execute the commands "while creating the container"
+We can write multiple CMD instructions but docker will process only the LAST CMD INSTRUCTION. Here there is no use of writing multiple CMD instructions inside a Dockerfile
+
+CMD touch kastro.txt
+RUN mkdir kastro
+CMD yum install git -y
+RUN yum install maven -y
+CMD git clone <Repo.URL>
+
+Ex 1:
+FROM ubuntu
+RUN apt update -y
+RUN apt install git -y
+
+docker build -t image1 .
+docker run -it --name container1 image1:latest
+
+Ex 2:
+FROM ubuntu
+RUN apt update -y
+RUN apt install maven -y
+RUN touch kastro.txt
+CMD apt install mysql-server -y
+
+Task: Make sure to write the correct  CMD instruction and run the container
+
+COPY
+To copy the files from one location to another location
+
+ADD
+It is also used to copy the files from source to destination location especially from the internet
+
+FROM ubuntu
+RUN apt update -y
+COPY kastro.py /tmp
+ADD https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.111/bin/apache-tomcat-9.0.111.tar.gz /tmp
+
+WORKDIR
+Using this command we can set the working directory for an image or a container
+It is used to go inside a desired directory
+
+Note: Whatever instructions that we write after WORKDIR command,all those instructions will be executed inside the WORKDIR path
+
+FROM ubuntu
+RUN apt update -y
+COPY kastro.py /tmp
+ADD https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.111/bin/apache-tomcat-9.0.111.tar.gz /tmp
+WORKDIR /tmp
+RUN mkdir kastro
+
+LABEL
+It is used to assign the metadata for our image in the form of key-value pair
+
+ENV
+This is used to declare varaibles
+FROM ubuntu
+RUN apt update -y
+LABEL author KASTRO
+ENV course multicloud-with-DevOps
+ENV trainer kastro
+
+EXPOSE
+It is used to expose the container to outside world
+
+Project 1:
+https://github.com/KastroVKiran/ECR-ECS-Project.git
+
+FROM ubuntu
+RUN apt udpate -y
+RUN apt install apache2 -y
+RUN apt install apache2-utils -y
+RUN apt clean
+COPY ECR-ECS-Project/ /var/www/html/
+RUN service apache2 restart
+EXPOSE 80
+CMD ["usr/sbin/apachectl", "-D", "FOREGROUND"]
+
