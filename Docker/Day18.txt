@@ -1,0 +1,89 @@
+(Day 20) 06-11-2025
+~~~~~~~~~~~~~~~~~
+Docker
+~~~~~~~~~~~~~~~~~
+Port Mapping
+
+docker run -itd --name <ContainerName> -p <HostPortNo.>:<ContainerPortNo.> <ImageName>:<VersionNo.>
+
+Host Port	- this is the port on docker host machine. Using this port we have to access the app running inside the container. Host port can be changed to any number of our convenience. host port should be opened in the SG of VM, only then we can access the application on browser.
+Container Port	- this is the port inside the container where the application is running. Whatever port that we have mentioned inside the Dockerfile as EXPOSE, that is considered as container port
+
+USER
+We can set an username for an image or a container
+
+USER <UserName>
+
+AUTHOR
+We will define who is the author of the dockerfile
+
+AUTHOR <AuthorName>
+
+ARGS
+It is used to avoid the hardcoding values in the dockerfile
+ARGS will be passed on a container
+These are the variables which runs outside of a container
+
+ENTRYPOINT
+These instructions will be executed while creating the container
+These instructions cannot be overwritten. CMD instructions can be overwritten
+
+MAINTAINER
+It represents the author/maintainer of the dockerfile
+
+MAINTAINER <AuthoName> <AuthorEmail> <ProjectName>
+
+VOLUMES
+It is used to store data
+Docker Volumes
+If you want to store the data permanently then we will use Docker Volumes concept.
+
+==> DOCKER VOLUMES
+Volume - Storage
+It is just a folder inside a container
+We will use docker volumes to store the data of docker containers
+The docker volumes are also called as Persistent Volumes
+A volume can be shared between multiple containers
+
+Method 1: Creating volumes using Dockerfile
+FROM ubuntu
+VOLUME ["volume1"]
+
+docker volume ls
+
+Method 2: Sharing the volume b/w containers
+Volume 1 ----> Container 1
+
+ docker run -it --name container2 --volumes-from container1 ubuntu
+
+Method 3: Creating a volume using command
+docker run -it --name container4 -v /volume2 ubuntu
+
+Method 4: Creation of volume on host machine and attaching it with a container
+
+Method 5: Creation of EBS Volume and attaching with Container
+
+==> Installation of Jenkins using Docker
+docker run -itd --name jenkins -p 8080:8080 jenkins/jenkins
+
+docker kill $(docker ps -aq)			----> To kill all the containers 
+docker rm $(docker ps -aq)			----> To remove all the containers
+docker rmi -f $(docker images -q)		----> To delete all the images
+
+==> DOCKER COMPOSE
+To automate the creation of multiple containers we will use DOCKER-COMPOSE
+Docker-compose is used to deploy microservices applications
+It is a tool used to define and run multi-container applications
+Instead of running multiple docker run commands manually, we will automate by writing "docker-compose.yml"
+
+YML or YAML ---> Yet Another Markup Language
+
+docker-compose up
+
+
+
+7218492830
+
+
+
+
