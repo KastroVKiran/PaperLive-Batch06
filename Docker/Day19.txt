@@ -1,0 +1,77 @@
+(Day 21) 07-11-2025
+~~~~~~~~~~~~~~~~~
+Docker
+~~~~~~~~~~~~~~~~~
+
+docker kill $(docker ps -aq)			----> To kill all the containers 
+docker rm $(docker ps -aq)			----> To remove all the containers
+docker rmi -f $(docker images -q)		----> To delete all the images
+
+==> DOCKER COMPOSE
+To automate the creation of multiple containers we will use DOCKER-COMPOSE
+Docker-compose is used to deploy microservices applications
+It is a tool used to define and run multi-container applications
+Instead of running multiple docker run commands manually, we will automate by writing "docker-compose.yml"
+
+vi dockercompose.sh
+sudo dnf install docker -y
+sudo systemctl enable docker
+sudo systemctl start docker
+docker version
+
+sudo curl -SL https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+docker compose version
+
+
+For each microservice we need to write a Dockerfile
+For each microservice we need to build the docker image
+To create the containers for each microservice, we will automate the process of creating the containers using docker-compose.yml file
+docker-compose up ----> Running
+docker-compose down ----> Stopped
+
+https://github.com/KastroVKiran/Kastro-Ecom-DC.git
+
+Dockerfile
+FROM ubuntu
+RUN apt update -y
+RUN apt install apache2 -y
+COPY index.html /var/www/html
+CMD ["/usr/sbin/apachectl", "-D", "FOREGROUND"]
+
+
+docker run -itd --name main-container -p 81:80 main-service:v1
+
+
+Using docker-compose we will have port based routing
+
+Using k8s we will do path based routing ----> ingress controller / API Gateway
+
+LB URL	-----> configure this url to the custom domain
+
+
+Project: https://www.youtube.com/watch?v=BScNFDBdE7M&list=PLs-PsDpuAuTfG3gFR5DnVD58kT7JBO97x&index=2&t=18s&pp=iAQB
+
+Project: https://youtu.be/b3lKRtF_LME?si=A7JE_5-WolxgJtbQ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
