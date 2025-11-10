@@ -1,0 +1,124 @@
+(Day 22) 10-11-2025
+~~~~~~~~~~~~~~~~~
+Kubernetes
+~~~~~~~~~~~~~~~~~
+K8s
+It is an open source container orchestration platform that automates;
+	Deployment
+	Scaling
+	Load Balancing
+	Manage the containerized applications
+
+Developed by Google 2014
+CNCF maintains from 2015
+
+Why we need K8s?
+Multiple containers
+	- update them
+	- make sure they dont go down
+	- restart all of them, if they fail
+
+K8s automates all of the above things
+
+Docker Swarm Vs K8s
+
+Event organizer -----> Docker Swarm			K8s
+
+What is a cluster?
+Cluster means group of servers that work together to run containerized applications
+
+Cluster components;
+1. Control Plane / Master Node
+	- manages scheduling, scaling, monitoring
+
+2. Worker Node(s)
+	- each nodes run containers inside POD
+
+K8s Architecture
+
+Cluster types;
+1. Self managed k8s cluster
+	1.1 minikube - single node cluster - for beginners
+	1.2. kubeadm - multi node cluster - manual maintenance 
+	1.3 kops	- multi node cluster - manual maintenance
+	1.4 kubespray
+	1.5 kind
+	1.6 Rancher
+
+2. Managed k8s cluster
+	2.1 AWS	- EKS (Elastic K8s Service)
+	2.2 GCP		- GKE (Google K8s Engine)
+	2.3 Azure	- AKE (Azure K8s Engine)
+
+
+How to create a cluster?
+CLI
+AWS Console
+Terraform
+
+Note: All the k8s deployments we will be doing in EKS Cluster
+Note: Expect a minimum of 1000 Rs
+
+K8s Resources
+
+Creation of resources;
+1. Declarative	- manifest yml files - execute the yml file ----> Resource will get created ----> Extension: .yml or .yaml - Production level
+2. Imperative	- command execution ---> kubectl run nginx-pod --image=nginx
+
+Why we prefer Manifest files?
+	Automation
+	Clarity
+	Reusability
+
+While writing the manifest files, the most important thing is "DOCKER IMAGE" 
+Writing the Dockerfile, building the docker image, tagging the docker image, pushing the docker image to docker hub is all what we do with DOCKER
+This docker image which is available in the dockerhub, will configured in the k8s manifest file
+
+Structure of a manifest file;
+apiVersion
+Defines the k8s apiVersion (Ex: v1, apps/v1,...)
+Different resources have different API versions
+
+
+kind
+we will define what k8s resource we want to create
+
+
+metadata
+contains the info about the k8s resource
+
+
+spec
+define which image is used to create a pod
+define container name
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
