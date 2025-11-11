@@ -1,0 +1,200 @@
+(Day 23) 11-11-2025
+~~~~~~~~~~~~~~~~~
+Kubernetes
+~~~~~~~~~~~~~~~~~
+Creation of Minikube Cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+=> Launch Ubuntu 24.04, t2.medium, 30 GB
+=> Connect to VM
+=> Lets install minikube, kubectl
+
+sudo -s ----> sudo apt update -y ----> hostnamectl set-hostname minikube ----> sudo -i ----> 
+vi minikube.sh ----> 
+sudo apt update -y
+sudo apt upgrade -y
+sudo apt install curl wget apt-transport-https -y
+sudo curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo mv minikube-linux-amd64 /usr/local/bin/minikube
+sudo chmod +x /usr/local/bin/minikube
+sudo minikube version
+sudo curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+sudo echo "$(cat kubectl.sha256) kubectl" | sha256sum --check
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+sudo minikube start --driver=docker --force
+
+----> esc ----> :wq ----> sh minkube.sh ----> minikube status ----> You can see only ONE node. Both master and worker are there in single node. ----> kubectl get nodes ----> kubectl get namespace ----> kubectl get pods ----> kubectl get all
+
+ls -la
+You will see '.kube' directory
+cd .kube
+ls -la
+You will see 'config' file ----> This is where the cluster info is available. Never change this file
+cat config 
+
+Creation of EKS Cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+===> Step - 1 : Create EKS Management Host in AWS
+Launch Ubuntu 24.04 VM (t2.micro, 30 GB)
+
+=> Connect to machine and install kubectl using below commands
+curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin
+kubectl version --short --client
+
+=> Install AWS CLI latest version using below commands
+sudo apt install unzip
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+
+=> Install eksctl using below commands
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+eksctl version
+
+===> Step - 2 : Create IAM role & attach to EKS Management Host
+Create New Role using IAM service ( Select Usecase - ec2 )
+
+Add below permissions for the role
+
+IAM - fullaccess
+VPC - fullaccess
+EC2 - fullaccess
+CloudFormation - fullaccess
+Administrator - acces
+Enter Role Name (eksroleec2)
+
+Attach created role to EKS Management Host (Select EC2 => Click on Security => Modify IAM Role => attach IAM role we have created)
+
+===> Step - 3 : Create EKS Cluster using eksctl
+Syntax:
+N. Virgina:
+eksctl create cluster --name kastro-cluster --region us-east-1 --node-type t2.medium  --zones us-east-1a,us-east-1b
+
+Mumbai:
+eksctl create cluster --name kastro-cluster --region ap-south-1 --node-type t2.medium  --zones ap-south-1a,ap-south-1b
+
+By default the above commands create 2 worker nodes with 80 GB capacity
+
+If we need more worker nodes, we have to explicitly specify the number as shown below;
+You can use the --nodes flag, like:
+eksctl create cluster --name kastro-cluster --region us-east-1 --node-type t2.medium --zones us-east-1a,us-east-1b --nodes 3
+
+Note: Cluster creation will take 15 to 20 mins of time (we have to wait). After cluster created we can check nodes using below command.
+
+===> Step - 4 : After your practise, delete Cluster and other resources we have used in AWS Cloud to avoid billing
+eksctl delete cluster --name kastro-cluster --region us-east-1
+
+
+Structure of a YML File;
+apiVersion
+kind
+metadata
+spec
+
+Basic Commands;
+To see the api-version of different k8s resources
+kubectl api-resources
+kubectl explain <ResourceName>.apiVersion
+kubectl api-resources | grep <ResourceName>
+kubectl explain <ResourceName>
+
+To execute the yml file;
+kubectl apply -f <FileName>.yml
+
+Detailed infor of a specific manifest file
+kubectl describe -f <FileName>
+
+To delete a resource which is created using a yml file
+kubectl delete -f <FileName>.yml
+
+To see the list of worker nodes
+kubectl get nodes
+
+What is Pod?
+Pod is the smallest deployment unit in K8s
+Pod helps to run containers
+A pod can have one or more containers that share network, storage, and lifeycycle
+But it is preferred to have only one container inside a pod
+Each pod will get its own IP address
+Using this Pod IP, pods can communicate internally, by default
+
+Pod Lifecyle;
+Pod lifecycle represents from the birth to the death of a pod
+Pending
+Running
+Failed
+Unknown (communication is lost)
+
+Note: When a pod get deleted, a new IP will allocated to a new pod
+
+Types of PODS;
+1. Single container pod	--- one pod will have only one container
+2. Multi container pod --- one pod will have more than one container. It is also known as Sidecar Pattern
+3. Init container pod --- special containers that run before the main app containers
+
+How pods communicate?
+Pods communicate with eachother using pod ip
+every pod will have an unique ip address
+pods are ephemeral --- it means it can die easily
+
+How pod ips are allocated?
+CNI plugin running on each node handles the ip allocation for a pod
+
+Creation of pods;
+Imperative approach;
+kubectl run <Pod-Name> --image=<ImageName> --port=<PortNumber>
+
+1/1 ----> 1 pod - 1 container running
+
+To go inside a container which is running inside a pod
+kubectl exec -it single-container-pod -c nginx-container -- /bin/bash
+
+kubectl exec -it single-container-pod -- /bin/bash
+
+kubectl get pod <Pod-Name> -o jsonpath='{.spec.containers[*].name}'
+
+To delete the resources created using a specific yml file;
+kubectl apply -f 01pod.yml
+
+Multi container pod;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
