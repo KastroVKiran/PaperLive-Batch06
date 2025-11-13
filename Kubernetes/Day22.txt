@@ -1,0 +1,80 @@
+(Day 24) 13-11-2025
+~~~~~~~~~~~~~~~~~
+Kubernetes
+~~~~~~~~~~~~~~~~~
+K8s Services
+----------------------------------------
+A K8s service is a way to expose our application which is running inside a pod - within cluster, outside the cluster
+within the cluster ---- backend code
+outside the cluster ---- a real application
+
+The manifest file which is used to create a pod is known as "Pod Manifest File"
+The manifest file which is used to create a service is known as "Service Manifest File"
+
+Types of services;
+1. ClusterIP (default service)
+2. NodePort
+3. Load Balancer
+4. External Name - ingress controller
+5. Headless Service - statefulset
+
+1. ClusterIP
+You can access the application with in the cluster only
+Pods are ephemeral - pod IPs will change - it gives a stable virtual IP (VIP)
+
+Labels are used to identify the pod --- pod labels
+service will identity using selectors
+
+kubectl get pods
+kubectl get svc
+
+kubectl delete svc <ServiceName>
+kubectl delete pod <PodName>
+
+
+2. NodePort
+NodePort is a service type in k8s that exposes our application to be accessible externally (outside the cluster)
+The port range for NodePort is in between 30000-32767
+If you dont provide NodePort IP in the service manifest file, by default k8s will allocate a random port number with in the range (30000-32767)
+To access the application: NodePublicIP:NodePort
+
+3. Load Balancer
+It is also used to access the application using Load Balancer URL externally
+Load Balancer service will create Load Balancer in the AWS Cloud
+
+Configuring the IPs of worker nodes becomes complex when we want to route the traffic to a custom domain
+But if we have load balancer, we can directly configure load balancer URL with custom domain
+
+LB URL -----> www.zomato.com
+
+													Worker Nodes <----- LB URL <------ www.zomato.com
+
+Load Balancer internally uses NodePort
+
+Microservices ---- 10 microservices ---- 10 load balancers will get created
+We will use ingress controller to deploy microservices based application
+
+K8s Namespaces
+----------------------------------------
+Namespace is an isolated environment for different applications running in the cluster
+
+Zomato	--- Same cluster --- same namespace
+Swiggy	--- Same cluster --- same namespace
+
+Teams -- dev team , test team, prod team
+
+kubectl get ns
+kubectl create ns dev
+kubectl get all -n dev
+kubectl config set-context --current --namespace=dev
+
+
+RBAC - Roll Based Access Control
+
+
+
+
+
+
+
+
