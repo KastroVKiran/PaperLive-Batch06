@@ -1,0 +1,262 @@
+(Day 25) 14-11-2025
+~~~~~~~~~~~~~~~~~
+Kubernetes
+~~~~~~~~~~~~~~~~~
+K8s Controllers
+----------------------------------------
+We dint provided HA for our applications
+In real-time we need to provide HA for our applications - which means when we delete a pod, K8s should automatically recreate the pod
+To provide HA for our applications, in K8s we have a concept which is known as K8s Controllers
+
+Zomato -----> 24/7 ----> 3 pods running (desired state)
+The controller sees the actual pods (0)..... actual status and the desired status (3)
+actual status is 3 -----> 1 pod got deleted ----> Actual (2) Vs Desired (3) ----> Recreate the pod to match desired status -----> Reconciliation 
+
+Types of k8s controllers;
+1. Replication Controller
+2. Replica Set
+3. Deployment
+4. Daemon Set
+5. StatefulSet
+
+1. Replication Controller
+RC ensures that a specified number of pod replicas are running at any given time
+
+kind: Pod
+kind: Service
+kind: namespace
+
+kind: ReplicationController
+replicas: 5 
+
+It is a legacy controller
+
+2. Replica Set
+RS is advanced version for RC
+It is also used to manage pod lifecycle and ensures the desired number of pods are always running
+The diff b/w RC and RS is in Selector
+
+Selector is used to identify the pod by using pod label
+We can give multiple labels to the pod
+
+RC
+selector:
+	app: zomato-app
+
+RS
+selector:
+	matchLabels:
+		app: zomato-app
+		env: dev
+		version: v2
+
+ kubectl get pods --show-labels
+kubectl get pods -w
+kubectl describe pod -l app=zomato-app | grep -i Image
+
+Zomato --- v1
+Swiggy --- v2
+
+The problem with RS is roll out is not possible
+we will use Deployment - roll out and roll in
+
+
+3. Deployment
+handles rolling updates with zero downtime
+
+Types of deployment strategies;
+1. Rolling Update				- default deploy strategy - no downtime
+2. ReCreate					- deletes all the existing pod - creates new pods - some downtime
+3. Blue-Green Deployment		- manually maintained - new version (green), old version (blue)
+4. Canary Deployment			- 70% of traffic (old application), 30% of traffic (new application)
+
+
+5 - v1 --- old pod1 delete, oldpod2 delete
+5 - v2 --- newpod1, newpod2,
+
+kubectl annotate deployment zomato-deployment \
+	kubernetes.io/change-cause="updated Zomato to swiggy due to bugs in Zomato" \
+	--overwrite
+
+
+---------------------------------------------------------------------------
+Step 1: Create nginx-deploy (v1, nginx 1.25)
+vi nginx-v1.yaml ---->
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deploy
+  labels:
+    app: nginx                         # Labels on the Deployment object (organizational)
+  annotations:
+    kubernetes.io/change-cause: "Initial release (v1) with nginx 1.25"
+    # ^ Human-readable "why" — shows in `kubectl rollout history` and is copied to the RS.
+spec:
+  replicas: 3                          # Desired Pod count (default: 1)
+  revisionHistoryLimit: 10             # Old ReplicaSets kept for rollback (default: 10)
+  minReadySeconds: 5                   # Seconds Pod must be Ready before counted Available (default: 0)
+  progressDeadlineSeconds: 300         # Mark rollout stalled after N seconds (default: 600)
+  selector:
+    matchLabels:
+      app: nginx                       # Must match template.metadata.labels; don't change after create
+  strategy:
+    type: RollingUpdate                # Deployment strategy (default: RollingUpdate)
+    rollingUpdate:
+      maxSurge: 1                      # Extra Pods allowed during update (default: 25%)
+      maxUnavailable: 0                # Allowed unavailable during update (default: 25%)
+  template:
+    metadata:
+      labels:
+        app: nginx                     # <-- Services select Pods by these labels (not Deployment labels)
+        version: v1                    # Optional: helps visualize v1→v2→v3
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25            # v1 image (imagePullPolicy default for tagged images: IfNotPresent)
+          # imagePullPolicy: IfNotPresent
+
+kubectl apply -f nginx-v1.yaml
+kubectl describe deployment <Deployment-Name>
+	It will show OldReplicaSet as None and NewReplicaSet as name of the deployment along with pod count
+
+kubectl rollout status deploy/nginx-deploy
+kubectl get deploy/nginx-deploy
+kubectl get rs -l app=nginx
+kubectl get pods -l app=nginx -o wide
+
+Step 2: Verify the Annotation and Revision
+Show history:
+kubectl rollout history deployment nginx-deploy
+
+Expected:
+deployment.apps/nginx-deploy
+REVISION  CHANGE-CAUSE
+1         Initial release (v1) with nginx 1.25
+If kubernetes.io/change-cause wasn’t set, CHANGE-CAUSE would be empty.
+
+[Suppose lets i will create an empty deployment without mentioning change cause, and see whether we will see 'empty' in the change-cause or ot.
+kubectl create deploy kastro-deploy --image=nginx
+kubectl rollout history deployment kastro-deploy
+You will see change-cause as "None"
+
+You can also see the revision number on the ReplicaSet:
+kubectl get rs -l app=nginx -o custom-columns=RS:.metadata.name,REV:.metadata.annotations.deployment\.kubernetes\.io/revision,CAUSE:.metadata.annotations.kubernetes\.io/change-cause
+
+Why this matters: Revision numbers are not stable identifiers (a rollback creates a new revision). The change-cause tells the human story (“what’s in this version”).
+
+Step 3: Upgrade to nginx 1.26 (v2)
+
+vi nginx-v2.yaml ---->
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deploy
+  labels:
+    app: nginx
+  annotations:
+    kubernetes.io/change-cause: "v2 with nginx 1.26"   # Update the cause for this change
+spec:
+  replicas: 3
+  revisionHistoryLimit: 10
+  minReadySeconds: 5
+  progressDeadlineSeconds: 300
+  selector:
+    matchLabels:
+      app: nginx
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: v2                                    # Bump version label (optional but visible)
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.26                            # v2 image
+
+
+Diff → apply → watch:
+kubectl diff -f nginx-v2.yaml
+kubectl apply -f nginx-v2.yaml
+kubectl rollout status deploy/nginx-deploy
+kubectl get pods -l app=nginx -w        # watch +1 v2, -1 v1 pattern in real time
+
+History now:
+REVISION  CHANGE-CAUSE
+1         Initial release (v1) with nginx 1.25
+2         v2 with nginx 1.26
+
+Mechanics recap: Deployment creates a new RS for v2, surges +1 Pod, waits until it’s Available (readiness + minReadySeconds), then scales the old RS down by 1. Repeats until all are v2.
+
+Step 4: Upgrade to nginx 1.27 (v3)
+
+vi nginx-v3.yaml ---->
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deploy
+  labels:
+    app: nginx
+  annotations:
+    kubernetes.io/change-cause: "v3 with nginx 1.27"
+spec:
+  replicas: 3
+  revisionHistoryLimit: 10
+  minReadySeconds: 5
+  progressDeadlineSeconds: 300
+  selector:
+    matchLabels:
+      app: nginx
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: v3
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27
+
+Diff → apply → verify:
+kubectl diff -f nginx-v3.yaml
+kubectl apply -f nginx-v3.yaml
+kubectl rollout status deploy/nginx-deploy
+kubectl rollout history deploy/nginx-deploy
+
+Expected:
+REVISION  CHANGE-CAUSE
+1         Initial release (v1) with nginx 1.25
+2         v2 with nginx 1.26
+3         v3 with nginx 1.27
+
+Step 5: Perform a Rollback (to v2)
+List history, then rollback:
+kubectl rollout history deployment nginx-deploy
+
+kubectl rollout undo deployment nginx-deploy --to-revision=2
+# Output: deployment.apps/nginx-deploy rolled back
+
+Check history again:
+REVISION  CHANGE-CAUSE
+1         Initial release (v1) with nginx 1.25
+3         v3 with nginx 1.27
+4         v2 with nginx 1.26
+
+Key learning: The rollback creates a new revision (4) with the old template. Revision 2 no longer exists; this is why you should not rely on revision numbers alone. Use the CHANGE-CAUSE to understand what each revision represents.
+
+Verify the actual image:
+kubectl describe deployment nginx-deploy | sed -n '/Image:/p;/OldReplicaSets:/,/NewReplicaSet:/p'
+# or, precise:
+kubectl get deploy nginx-deploy -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+
+You should see nginx:1.26.
+---------------------------------------------------------------------------
