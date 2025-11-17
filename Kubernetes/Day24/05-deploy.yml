@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ebs-demo
+spec:
+  replicas: 1
+  selector:		# Defines how to identify the pods managed by this Deployment
+    matchLabels:
+      app: nginx-ebs		# Match pods with label "app=nginx-ebs"
+  template:			 # Pod template (used to create new Pods)
+    metadata:
+      labels:
+        app: nginx-ebs	# Label assigned to Pods (must match selector above)
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        volumeMounts:	# Mounts a volume inside the container
+        - name: ebs-storage	# Refers to the volume defined below
+          mountPath: /usr/share/nginx/html # Mount path inside the container # Anything stored here will persist in the EBS volume
+      volumes:
+      - name: ebs-storage		# Defines the volume to mount
+        persistentVolumeClaim:
+          claimName: ebs-pvc	#Uses the PVC we created earlier (ebs-pvc) #PVC dynamically provisions a gp3 EBS volume via 																		StorageClass
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ebs-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: nginx-ebs
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+

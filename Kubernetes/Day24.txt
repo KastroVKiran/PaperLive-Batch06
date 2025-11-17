@@ -1,0 +1,251 @@
+(Day 26) 17-11-2025
+~~~~~~~~~~~~~~~~~
+Kubernetes
+~~~~~~~~~~~~~~~~~
+K8s Controllers
+----------------------------------------
+DaemonSet
+
+If you want to deploy 1 pod on each worker node, then we will use DaemonSet
+
+K8s Volumes
+------------------------------------------
+If we want to persist the data even if the pod is deleted, then we will use K8s volumes concept
+
+Stateless	 - if i delete the pod and if the data is lost it is called as Stateless application
+Stateful - if i delete the pod and if the data is available, it is called as Stateful application - store the data on EBS Volumes
+
+PV		- Persistent Volume - it will manage the storage for the applications
+PVC	- Persistent Volume Claim
+
+When you attach storage to k8s workloads, we can do it in 2 ways;
+	1. Static Provisioning			- old and outdated - manual approach
+	2. Dynamic Provisioning
+
+AWS EBS volume will have the access mode as RWO (Read Write Once) - one pod can read-write
+
+Reclaim Policy
+It define what happens to PV if the PVC is deleted
+
+1. Retain
+persistentVolumeReclaimPolicy: Retain
+
+2. Delete
+persistentVolumeReclaimPolicy: Delete
+
+3. Recycle (Deprecated) 
+
+In Dynamic Provisioning, we have to use additional concept which is knonw as StorageClass
+
+A storage class defines how a volume should be created dynamically
+
+
+Pre-requisites;
+Attach a policy to the Worker Nodes - EBSCSIDriverPolicy
+
+eksctl utils associate-iam-oidc-provider --cluster <ClusterName> --region <RegionName> --approve
+
+
+
+eksctl utils associate-iam-oidc-provider --cluster kastro-cluster --region us-east-1 --approve
+
+
+=> Install EBS CSI Driver
+Download Helm installation script (Here I will use HELM to do this)
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+helm version
+
+Add the Helm repo
+helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
+
+helm repo update
+# This ensures Helm fetches the latest charts from the repo.
+
+helm repo list
+#You should see something like below;
+NAME                     URL
+aws-ebs-csi-driver       https://kubernetes-sigs.github.io/aws-ebs-csi-driver
+
+Install EBS CSI driver
+helm install aws-ebs-csi-driver aws-ebs-csi-driver/aws-ebs-csi-driver \
+    --namespace kube-system \
+    --create-namespace \
+    --set image.repository=602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/aws-ebs-csi-driver
+
+Verify installation
+kubectl get pods -n kube-system | grep ebs-csi
+#You should see controller and node pods in Running state.
+
+
+SC ----> PVC
+
+
+==> StatefulSet
+The pod names are randomly allocated in general
+So if you want a standard name for a pod, then we will use StatefulSet
+
+When we work with statefulset concept, we need to use HEADLESS Service
+
+Step 1: Install EBS CSI Driver (One Command)
+# This installs the EBS CSI driver as an EKS add-on (simplest method)
+aws eks create-addon \
+  --cluster-name kastro-eks \
+  --addon-name aws-ebs-csi-driver \
+  --region us-east-1
+
+# Wait for it to be ready
+aws eks wait addon-active \
+  --cluster-name kastro-eks \
+  --addon-name aws-ebs-csi-driver \
+  --region us-east-1
+
+Step 2: Attach IAM Role to Worker Nodes
+# Role Name
+"AmazonEBSCSIDriverPolicy"
+
+
+custom-storage-class.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: kastro-gp3
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  iops: "3000"
+  throughput: "125"
+  encrypted: "true"
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Retain
+
+
+kubectl apply -f custom-storage-class.yaml
+
+
+nginx-statefulset.yaml
+# --------------------------
+# Headless Service
+# --------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-headless               # Name of the service
+  labels:
+    app: nginx                       # Labels to identify this service
+spec:
+  ports:
+  - port: 80                         # Service port exposed
+    name: web                        # Named port (useful for reference)
+  clusterIP: None                    # Headless Service (no cluster IP assigned)
+                                     # This ensures DNS records are created for each pod
+                                     # Useful in StatefulSets to give stable DNS to pods
+  selector:
+    app: nginx                       # Service selects pods with this label
+---
+# --------------------------
+# StatefulSet
+# --------------------------
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nginx-statefulset            # StatefulSet name
+spec:
+  serviceName: "nginx-headless"      # MUST point to the headless service
+                                     # This gives pods stable DNS names like:
+                                     # nginx-statefulset-0.nginx-headless.default.svc.cluster.local
+  replicas: 2                        # Number of replicas/pods
+  selector:
+    matchLabels:
+      app: nginx                     # Ensures StatefulSet manages pods with this label
+  template:
+    metadata:
+      labels:
+        app: nginx                   # Pods will have this label
+    spec:
+      containers:
+      - name: nginx                  # Container name
+        image: nginx:1.21            # Nginx image version
+        ports:
+        - containerPort: 80          # Expose container port 80
+          name: web
+        volumeMounts:
+        - name: nginx-storage        # Mount persistent storage
+          mountPath: /usr/share/nginx/html
+                                     # Pod data persists across restarts
+        # Entry command for container
+        command:
+        - /bin/bash
+        - -c
+        - |
+          # Script executed when the container starts
+          echo "<h1>StatefulSet Pod: $HOSTNAME</h1>" > /usr/share/nginx/html/index.html
+          echo "<p>Storage Path: /usr/share/nginx/html</p>" >> /usr/share/nginx/html/index.html
+          echo "<p>Pod Started: $(date)</p>" >> /usr/share/nginx/html/index.html
+          nginx -g 'daemon off;'     # Start nginx in foreground mode
+
+  # --------------------------
+  # Persistent Volume Claim Template
+  # --------------------------
+  volumeClaimTemplates:              # Defines PVC for each replica
+  - metadata:
+      name: nginx-storage            # Must match volumeMounts name
+    spec:
+      accessModes: [ "ReadWriteOnce" ] # Each pod gets its own PV (bound separately)
+      storageClassName: kastro-gp3     # Storage class (must exist in cluster)
+      resources:
+        requests:
+          storage: 1Gi                 # Each PVC will request 1Gi storage
+
+
+kubectl apply -f nginx-statefulset.yaml
+
+
+
+
+
+# 1. Add data to pod-0
+kubectl exec nginx-statefulset-0 -- sh -c "echo 'Hello from Pod 0 - $(date)' > /usr/share/nginx/html/data.txt"
+
+# 2. Add data to pod-1  
+kubectl exec nginx-statefulset-1 -- sh -c "echo 'Hello from Pod 1 - $(date)' > /usr/share/nginx/html/data.txt"
+
+# 3. Verify each pod has its own data
+kubectl exec nginx-statefulset-0 -- cat /usr/share/nginx/html/data.txt
+kubectl exec nginx-statefulset-1 -- cat /usr/share/nginx/html/data.txt
+
+# 4. Delete both pods
+kubectl delete pod nginx-statefulset-0 nginx-statefulset-1
+
+# 5. Wait for pods to recreate (StatefulSet will recreate them automatically)
+kubectl get pods -w
+
+# 6. Verify data persisted after pod recreation
+kubectl exec nginx-statefulset-0 -- cat /usr/share/nginx/html/data.txt
+kubectl exec nginx-statefulset-1 -- cat /usr/share/nginx/html/data.txt
+
+
+
+==> Cluster Autoscaler
+Based on the requirement we can increase/decrease the node count
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
