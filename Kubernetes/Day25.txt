@@ -1,0 +1,419 @@
+Resource Quota/Limit Ranges
+===========
+A RQ in k8s limits the total amount of compute resources such as CPU, Memory, Object count that can be consumed by all the pods, or any k8s objects within a namespace.
+
+CPU is measured in terms of cores and Memory is measured in terms of Bytes
+1 CPU = 1000m
+200m = 0.2 CPU
+300m = 0.3 CPU
+500m = 0.5 CPU
+
+resources:
+	requests:
+		cpu: 200m
+
+	limits:
+		cpu: 500m
+
+
+
+Lets do a demo on this;
+✅ 1. Create Namespace
+kubectl create ns dev
+kubectl get ns
+
+✅ 2. Switch to dev namespace
+kubectl config set-context --current --namespace=dev
+kubectl config view --minify | grep namespace  # confirm current namespace
+
+✅ 3. Define Resource Quota: 
+
+vi dev-quota.yml ----> 
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: dev-quota                           # Name of the quota
+  namespace: dev                            # Apply quota to 'dev' namespace
+spec:
+  hard:
+    pods: "5"                                # Max 5 pods in this namespace
+    limits.cpu: "1"                          # Total CPU across all pods cannot exceed 1 core
+    limits.memory: 1Gi                       # Total memory across all pods cannot exceed 1Gi
+
+In the above YML, we are limiting the entire dev namespace to 5 pods total, 1 CPU, and 1GiB memory.
+This restricts over-provisioning of resources within a team/project.
+
+✅ Apply the Quota
+kubectl apply -f dev-quota.yml
+kubectl get resourcequota     # or: kubectl get quota
+kubectl get resourcequota -n dev
+kubectl describe resourcequota <Quota-name> -n dev
+
+Lets create a deployment and check quotas functionality ----> 
+vi zomato-deploy.yml ---->
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zomato-deployment
+  labels:
+    app: zomato
+spec:
+  replicas: 3                                # Requesting 3 pods. This is less than the value mentioned in dev-quota.yml file
+  selector:
+    matchLabels:
+      app: zomato
+  template:
+    metadata:
+      labels:
+        app: zomato
+    spec:
+      containers:
+        - name: zomato-container
+          image: kastrov/zomato
+          resources:
+            limits:
+              cpu: "1"                       # ⚠️ Each pod needs 1 core CPU
+              memory: "512Mi"                # Each pod needs 512Mi memory
+
+
+kubectl apply -f zomato-deploy.yml ----> Now 3 pods should run based on the replica count we have given ----> kubectl get pods ----> But you will see only 1 pod and in running state ----> Reason is, we have mentioned 1 cpu in above yml. Each pod will take 1 cpu. So currently created pod has taken 1 cpu, and there are no CPUs left for other two pods----> kubectl describe deployment <Deployment-Name> -n <NameSpaceName> ---> At the bottom in Events, you’ll see the details
+
+We requested 3 pods, and each requires 1 CPU, but the quota only allows 1 CPU total → violates quota
+
+✅ 5. Fix: Update Resources in YAML to Fit Within Quota
+Modify zomato-deploy.yml:
+resources:
+  limits:
+    cpu: "0.3"                    # Each pod needs only 0.3 CPU
+    memory: "300Mi"               # Each pod needs 300Mi memory
+
+Now total CPU = 0.9, total memory = 900Mi → within the quota (1 CPU, 1Gi memory)
+
+kubectl delete -f zomato-deploy.yml           # Clean old deployment
+kubectl apply -f zomato-deploy.yml            # Apply new one
+kubectl get pods ----> Wait for sometime you will see the pods (atleast 2-3 minutes)
+
+📌 Expected: All 3 pods will run now, because they respect the quota.
+
+kubectl delete -f zomato-deploy.yml
+kubectl delete -f dev-quota.yml
+kubectl delete ns dev
+
+This is all about Resource Quota.
+
+============================================
+HPA
+
+Autoscaling in k8s refers to the automatic adjustment of number of k8s resources based on real-time metrics such as CPU and Memory
+
+Types;
+HPA	- Horizontal Pod Autoscaler	- Pod level
+VPA	- Vertical Pod Autoscaler		- Pod level
+CA		- Cluster Autoscaler			- Node level
+
+If you want to work with HPA, we need to install METRICS SERVER or HEAPSTER
+If you want to work with VPA, we need to install CUSTOM DEFINITONS
+
+By default, in cloud specific cluster, metrics server will be installed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Step 1: Verify Cluster and Environment  
+kubectl get all
+eksctl get cluster ----> If you see error follow the below;
+
+# Set the AWS region (since you're using us-east-1 based on your worker nodes)
+export AWS_DEFAULT_REGION=us-east-1
+
+# Verify the region is set
+echo $AWS_DEFAULT_REGION
+
+# Now try to get cluster info
+eksctl get cluster
+
+You will see the response as below;
+NAME            REGION          EKSCTL CREATED
+kastro-cluster  us-east-1       	True
+
+Ensure your cluster is up and running.
+
+Step 2: Deploy the PHP-Apache Application
+Create a file php-apache.yaml with the following content:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-apache
+spec:
+  selector:
+    matchLabels:
+      run: php-apache
+  template:
+    metadata:
+      labels:
+        run: php-apache
+    spec:
+      containers:
+      - name: php-apache
+        image: registry.k8s.io/hpa-example
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-apache
+  labels:
+    run: php-apache
+spec:
+  ports:
+  - port: 80
+  selector:
+    run: php-apache
+
+kubectl apply -f php-apache.yaml
+
+kubectl describe svc php-apache
+kubectl describe deployment php-apache
+
+Step 3: Enable Horizontal Pod Autoscaler (HPA)
+Create HPA with CPU threshold of 50% and scaling between 1 and 10 pods:
+
+#Command to enable HPA:
+kubectl autoscale deployment php-apache --cpu-percent=50 --min=1 --max=10
+This keeps at least 2 pods, scales up to 10 pods, and maintains 50% CPU utilization.
+
+Check HPA status:
+kubectl get hpa
+
+Step 4: Generate Load
+Run a load generator to simulate traffic. This command continuously sends HTTP requests to php-apache, simulating high traffic load. The HPA monitors the CPU usage and, if it exceeds the threshold (50% in this case), Kubernetes scales up the number of pods automatically.
+
+kubectl run -i --tty load-generator --rm --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
+
+Monitor HPA scaling:
+kubectl get hpa php-apache --watch
+kubectl get deployment php-apache
+kubectl get pods
+
+In the terminal where you created the Pod that runs a busybox image, terminate the load generation by typing + C.
+Deploy Metrics Server (If Not Already Installed) Check if the metrics server is running:
+kubectl get deployment metrics-server -n kube-system
+
+If not present, install it:
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+Verify HPA and resource usage:
+kubectl get hpa
+kubectl top pods
+
+=================================================
+Ingress Controller
+
+Port based routing
+Path based routing
+
+Types of ingress controllers;
+	1. nginx ingress
+	2. ingress nginx - deprecated
+	3. aws ingress
+	4. traefik
+
+ingress.yml
+
+app1 ----> LB-URL/app1
+app2 ----> LB-URL/app2
+
+1. nginx
+2. httpd
+
+ ----> LB-URL/nginx
+ ----> LB-URL/httpd
+
+
+vi nginx.yml -----> 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+          ports:
+            - containerPort: 80
+          env:
+            - name: TITLE
+              value: "NGINX APP1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+  selector:
+    app: nginx
+
+----> esc ----> :wq 
+
+vi httpd.yml ---->
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpd
+  template:
+    metadata:
+      labels:
+        app: httpd
+    spec:
+      containers:
+        - name: httpd
+          image: httpd
+          ports:
+            - containerPort: 80
+          env:
+            - name: TITLE
+              value: "APACHE APP2"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+  selector:
+    app: httpd
+
+----> esc ----> :wq 
+
+vi ingress.yml ---->
+
+apiVersion: networking.k8s.io/v1   # API version for Ingress resource
+kind: Ingress                      # Declares this resource as an Ingress
+metadata:
+  name: k8s-ingress                # Name of the Ingress object
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"   # Disables automatic HTTP→HTTPS redirection
+    nginx.ingress.kubernetes.io/use-regex: "true"       # Allows regex in path definitions
+    nginx.ingress.kubernetes.io/rewrite-target: /$2     # Rewrites the target path; captures regex groups and sends them to the backend
+spec:
+  ingressClassName: nginx           # Ensures this ingress is handled by the nginx ingress controller
+  rules:                            # Rules section defines routing rules for incoming requests
+    - http:
+        paths:
+          - path: /nginx(/|$)(.*)   # Matches requests starting with /nginx
+            pathType: ImplementationSpecific  # Controller decides how path matching works (regex in this case)
+            backend:
+              service:
+                name: nginx         # Requests are routed to the nginx service
+                port:
+                  number: 80
+          - path: /httpd(/|$)(.*)   # Matches requests starting with /httpd
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: httpd         # Requests are routed to the httpd service
+                port:
+                  number: 80
+          - path: /(.*)             # Catch-all rule for all other requests
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nginx         # Default fallback backend is nginx
+                port:
+                  number: 80
+
+----> esc ----> :wq 
+
+Lets install ingress controller ---->
+To install ingress, firstly we have to install nginx ingress controller:
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.3.0/deploy/static/provider/cloud/deploy.yaml
+
+===================================
+ArgoCD & HELM
+
+It is a package manager for k8s
+It helps you to install and manage k8s applications using HELM charts
+these charts are available in HELM repo
+
+Argo CD
+Whenever we do k8s deployments, we will do using ArgoCD
+
+Lets setup ArgoCD using HELM;
+------------------------------------------------
+Install HELM
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+helm version
+
+Install ARGOCD using HELM
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
+
+In production, it is always suggested to create a custom namespace ----> kubectl create namespace argocd ----> Lets install argocd in the namespace 'argocd' ----> helm install argocd argo/argo-cd --namespace argocd ----> kubectl get all -n argocd ----> You will see multiple things which are running ----> Under 'services' you can see 'argo-cd server' and the type as ClusterIP. But to access outside of the cluster, we need Load Balancer. So lets edit this ClusterIP to LoadBalancer ----> For this i will use patch ----> 
+
+EXPOSE ARGOCD SERVER:
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}' ----> kubectl get all -n argocd ----> Now you can see the service called 'argo-cd server' changed to Load Balancer instead of ClusterIP ----> Copy the load balancer url ----> This is one way of getting the loadbalancer url. Another way is to install "jq" (J Query) ----> 
+
+yum install jq -y
+
+kubectl get svc argocd-server -n argocd -o json | jq --raw-output '.status.loadBalancer.ingress[0].hostname'
+The above command will provide load balancer URL to access ARGO CD
+
+Access the argocd using teh above load balancer url ----> Username: admin, 
+
+TO GET ARGO CD PASSWORD:
+------------------------------------------
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+----> Copy the password and provide in argo cd console ----> You will see the argo cd console ----> Here is where we will do the k8s deployments ----> Click on 'New App' ----> App Name: swiggy-app, Project name: default, Sync policy: Automatic, Source - Repo URL: <Repo URL> ----> Revision: HEAD, Path: ./ ----> Cluster URL: Select the one from dropdown, Namespace: default (If you want to deploy the pods in custom namespace, create that namespace and provide here) ----> Create ----> Click on the 'swiggy-app' ----> You can see the details of pods ----> kubectl get svc ----> Copy the load balancer url and access the app in new tab of browser ----> Lets say you want to change the image name in repo, you can change. Automatically you will see the modified app ----> Goto repo, change the image name, replicas count ----> Based on this everything will get updated in argocd ----> Goto Argocd ----> Click on 'sync' and 'snchronize' ----> Automatically the new app will get deployed. Here we dint used Jenkins but still we were able to automate the deployment process. 
+
+export ARGO_PWD='kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d'
+echo $ARGO_PWD
+
+
+https://github.com/KastroVKiran/argocd-zomato.git
+
+https://github.com/KastroVKiran/argocd-swiggy.git
