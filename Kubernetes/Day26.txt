@@ -1,0 +1,197 @@
+===PROBES===
+In k8s, probes are checks performed by the kubelet on containers to determine their health and availability
+
+
+Types probes;
+Liveness		- checks whether the application is running - pod is restarted
+Readiness	- checks whether the app is ready to receive the traffic - pod is removed
+Startup		- checks whether the app is responding or not - wait until the app is starting - outdated
+
+Parameters;
+initialDelaySeconds	- time to wait after container starts before first health check - 30
+periodSeconds		- how often to check
+timeoutSeconds		- max time to wait for response - mark as failed
+successThreshold		- how many successes in a row should come so that k8s will mark the pod as healthy
+failureThreshold		- how many failures in a row should come so that k8s will mark the pod as unhealthy
+
+
+nginx-liveness-readiness.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-probe
+  labels:
+    app: nginx-probe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-probe
+  template:
+    metadata:
+      labels:
+        app: nginx-probe
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest  # Official nginx image
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /index.html    # Probe will hit this path
+            port: 80
+          initialDelaySeconds: 5  # Wait before first check
+          periodSeconds: 5        # Repeat every 5 seconds
+        livenessProbe:
+          httpGet:
+            path: /index.html    # If this fails, restart container
+            port: 80
+          initialDelaySeconds: 15 # Give time before checking liveness
+          periodSeconds: 10       # Repeat every 10 seconds
+
+
+
+nginx-lb-probes.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-probe-lb
+  labels:
+    app: nginx-lb
+spec:
+  replicas: 3  # Create 3 replicas for Load Balancing
+  selector:
+    matchLabels:
+      app: nginx-lb
+  template:
+    metadata:
+      labels:
+        app: nginx-lb
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /index.html  # If this path doesn't respond, pod is not 'ready'
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /index.html  # If this path fails continuously, restart container
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-lb-service
+spec:
+  type: LoadBalancer  # Expose the app to internet
+  selector:
+    app: nginx-lb
+  ports:
+    - port: 80
+      targetPort: 80
+
+
+===RBAC===
+Roll Based Access Control & Service Accounts
+
+who can do what activity on which resources
+	who - users/service accounts
+	what - verbs (get, list, update, delete...)
+	which - resources (pods, services, deployments,...)
+
+Core RBAC components;
+1. Role
+2. ClusterRole
+3. RoleBinding
+4. ClusterRoleBinding
+
+Service Account (IRSA)
+A SA is an identity for pods inside the cluster
+each namespace has a default SA
+by default, every pod uses the default SA which is there in the default NS
+
+Create SA ---> Create a Role ---> Role Binding
+
+
+
+
+=> lets create a service account ----> 
+vi serviceaccount.yml ---->
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jack ---- username
+  namespace: dev ---- Here we are giving permission to dev namespace
+
+----> kubectl create -f serviceaccount.yml
+
+=> lets create role ----> 
+vi role.yml ---->
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: dev --- im attaching the role to 'dev' ns
+  name: dev-pod-reader ---- role name
+rules:
+- apiGroups: [""]
+  resources: ["pods"] ---- the permissions im giving to pods
+  verbs: ["get", "list", "watch"] --- for the pods im giving the permissions such as get, list and watch so that jack user can do these.
+
+----> kubectl create -f role.yml
+Since pods belong to the core API group, we use apiGroups: [""]. The apiGroups: [""] specifies that these permissions apply to resources in the core API group (where pods reside)
+
+=> lets bind the role ---->
+vi rolebinding.yml ---->
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods --- name of role binding
+  namespace: dev --- ns name
+subjects: --- here we will specify what we want to bind i.e service account (name is jack) and role (name is dev-pod-reader)
+- kind: User
+  name: jack
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: dev-pod-reader
+  apiGroup: rbac.authorization.k8s.io
+
+
+======Taints and Tolerations==============
+
+A taint is a property applied to a node that prevents pods from being scheduled on it unless the pods tolerates
+
+key=value:effect
+
+key=identifier for the taint
+value=provides additional info - optional
+effect=action taken on pods that dont tolerate the taint
+	NoSchedule	- pods without toleration will not be scheduled
+	PreferNoSchedule	- schedules tries to avoid placing the pods, but not strict
+	NoExecute			- existing pods are evicted unless they tolerate the taint
+
+taint the node 
+
+toleration is a property applied to a pod that allows to schedule on nodes with matching taints
+
+
+===========Monitoring===============
+
+Prometheus	- collects the metrics - text format
+Grafana - visualization tool
+
+
+Share your email ids ----> EFK Video
+
+Istio
+Gateway API
