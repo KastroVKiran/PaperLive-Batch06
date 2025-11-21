@@ -1,0 +1,136 @@
+(Day 29) 21-11-2025
+~~~~~~~~~~~~~~~~~
+Ansible
+~~~~~~~~~~~~~~~~~
+Linux Fundamentals
+Git and GitHub 
+Maven
+Tomcat
+Jenkins
+SonarQube
+Nexus
+Docker
+Kubernetes
+
+Ansible
+Terraform
+-----------------------------------------------------------------------
+Ansible is an configuration management tool
+Free and open source
+2012
+Owned by RedHat
+Playbooks - yml
+
+Approaches to work with Ansible;
+AdHoc Commands
+Modules
+Playbooks
+
+sudo dnf install python3-pip -y
+pip install ansible
+ansible --version
+
+
+Setting up the host inventory file
+Note: By default, in the latest versions we will not have host inventory file in /etc/ansible/hosts path. We need to explicitly create this path and also the inventory file
+
+Step 1 — Create /etc/ansible/ directory
+sudo mkdir -p /etc/ansible
+
+Step 2 — Create a config file
+sudo nano /etc/ansible/ansible.cfg
+
+Paste this minimal configuration:
+[defaults]
+inventory=/etc/ansible/hosts
+host_key_checking=False
+
+Save & exit.
+
+Step 3 — Create the hosts inventory file
+sudo nano /etc/ansible/hosts
+
+Add your hosts:
+[dev-servers]
+your-ec2-private-ip-here
+
+[test-servers]
+your-ec2-private-ip-here
+
+Save & exit.
+
+To verify the connection ----> ansible all -m ping ---> You should see the response from all the 4 worker nodes as "pong"
+
+ansible all --list-hosts
+ansible-inventory --list
+
+ansible dev-servers[1] --list-hosts
+ansible dev-servers[2] --list-hosts
+
+ansible test-servers[1] --list-hosts
+ansible test-servers[2] --list-hosts
+
+export HISTTIMEFORMAT="%F%T"
+history
+
+There are three ways of working with ansible;
+1. AdHoc Commands - these are simple Linux commands which are used for temporary purposes
+2. Modules
+3. Playbooks
+
+AdHoc Commands;
+37  2025-11-2103:25:08ansible all -a "yum update -y"
+   38  2025-11-2103:26:06ansible all -a "yum install git -y"
+   39  2025-11-2103:28:07ansible test-servers -a "yum install maven -y"
+   40  2025-11-2103:29:14ansible dev-servers -a "yum install maven -y"
+   41  2025-11-2103:30:53ansible all -a "yum install httpd -y"
+   42  2025-11-2103:31:16ansible all -a "systemctl start httpd -y"
+   43  2025-11-2103:31:22ansible all -a "systemctl start httpd"
+   44  2025-11-2103:31:30ansible all -a "systemctl status httpd"
+   45  2025-11-2103:33:48mvn --version
+   46  2025-11-2103:33:54git --version
+   47  2025-11-2103:34:45systemctl status httpd
+   48  2025-11-2103:36:05ansible all -a"yum remove git* maven* httpd* -y"
+   49  2025-11-2103:37:35ansible dev-servers -a "touch dev.txt"
+   50  2025-11-2103:39:37ansible dev-servers -a "ls"
+   51  2025-11-2103:40:23ansible dev-servers -a "cd /home/ec2-user"
+   52  2025-11-2103:41:06ansible dev-servers -a "mkdir -p /home/ec2-user/kastro"
+   53  2025-11-2103:42:40ansible test-servers -a "useradd ansible"
+   54  2025-11-2103:43:14ansible test-servers -a "cat /etc/passwd"
+
+
+Modules
+Ansible modules are units of code that can control system resources or execute system commands
+Modules works on key-value pair
+Depending on the work, the module will change
+
+install ----> yum
+create an user ----> user
+
+ansible all -m yum -a "name=git state=present"
+States;
+yum module
+present	- install
+absent	- uninstall
+latest	- update/upgrade
+
+
+service module
+started - start
+stopped - stop
+restarted - restart
+enabled - enable
+
+
+ansible all -m version -a "name=git state=present"
+
+ansible all -m command -a "git --version"
+
+
+
+
+
+
+
+
+
