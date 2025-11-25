@@ -1,0 +1,6 @@
+---
+- name: playbook to test the connection
+  hosts: all
+  tasks:
+    - name: test the connection
+      ping:

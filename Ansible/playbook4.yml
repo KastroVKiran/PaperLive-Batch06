@@ -1,0 +1,23 @@
+- name: installation of git, maven, docker
+  hosts: all
+  become: yes
+  tasks:
+    - name: installation of git
+      yum:
+        name: git
+        state: present
+
+    - name: installation of maven
+      yum:
+        name: maven
+        state: present
+
+    - name: installation of docker
+      yum:
+        name: docker
+        state: present
+
+    - name: starting docker service
+      service:
+        name: docker
+        state: started

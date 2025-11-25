@@ -1,0 +1,348 @@
+(Day 30) 25-11-2025
+~~~~~~~~~~~~~~~~~
+Ansible
+~~~~~~~~~~~~~~~~~
+Playbooks
+
+Playbook is a collection of multiple modules
+We can execute all the modules written inside a playbook at a time
+Playbook is also written using yml
+YML starts with --- and ends with ... (Both of these are optional)
+Playbook contains tasks
+
+
+Project 1: Executing a Shell Script (Sample Nginx App) using Ansible Playbook on "Dev-Servers"
+=============================================================
+1) Configure "dev-servers" in Ansible Host Inventory File
+
+2) In the Ansible Master Node, be in /root path
+
+3) Create a Sample Shell Script
+
+vi deploy_app.sh ----->
+#!/bin/bash
+
+echo "Starting sample application deployment..."
+
+# Update packages
+sudo yum update -y
+
+# Install nginx as a sample application
+sudo yum install -y nginx
+
+# Start nginx service
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+echo "Deployment completed successfully!"
+
+3.1) Make the script executable:
+chmod +x /root/deploy_app.sh
+
+4) Ansible Playbook to Execute the Script
+
+vi run-deploy.yml ---->
+---
+- name: Run deployment script on dev servers
+  hosts: dev-servers
+  become: yes
+
+  tasks:
+    - name: Copy deployment script to remote server
+      copy:
+        src: /root/deploy_app.sh
+        dest: /tmp/deploy_app.sh
+        mode: '0755'
+
+    - name: Execute deployment script
+      command: /tmp/deploy_app.sh
+
+5) Run the playbook
+ansible-playbook run-deploy.yml
+
+This will:
+✔ Copy your shell script from the master (controller)
+✔ Place it on /tmp/deploy_app.sh on each dev server
+✔ Make it executable
+✔ Run it normally
+
+🔥 Result
+Every time you run the playbook, your script automatically executes on all dev-servers exactly as you want.
+
+6) To Remove Ansible using AdHoc Command
+ansible dev-servers -b -m yum -a "name=nginx state=absent autoremove=yes"
+OR
+ansible dev-servers -b -m yum -a "name=nginx state=absent"
+
+✅ Explanation of -b, -m, and -a
+-b → Become (sudo)
+Same as writing: --become
+If you remove -b, Ansible will try to remove nginx without sudo, which will fail.
+So YES — it is required for package operations.
+
+-m → Module
+
+-a → Arguments
+-a means:
+➡️ Pass arguments to the module
+Here, 
+"name=nginx state=absent" are the arguments expected by the yum module.
+If you remove -a, Ansible will not know what to uninstall.
+
+7) To Remove Ansible using Playbook (Ask Students to Write)
+---
+- name: Remove nginx from dev servers
+  hosts: dev-servers
+  become: yes
+
+  tasks:
+    - name: Stop nginx service if running
+      service:
+        name: nginx
+        state: stopped
+      ignore_errors: yes
+
+    - name: Disable nginx service
+      service:
+        name: nginx
+        enabled: no	#Disable the service, so it will not start again
+      ignore_errors: yes
+
+    - name: Remove nginx package
+      yum:
+        name: nginx
+        state: absent	#uninstall the package
+        autoremove: yes	#remove unused dependencies
+
+Execute the Playbook;
+ansible-playbook remove-nginx.yml
+
+
+Project 2: Deploying Hotstar App in Tomcat using Ansible Playbook on "Dev-Servers"
+=============================================================
+1) Configure "dev-servers" in Ansible Host Inventory File
+
+2) In the Ansible Master Node, be in /root path
+2.1) Install Maven and Git
+2.2) Clone the code (https://github.com/KastroVKiran/Hotstar-App.git)
+2.3) Generate artifact using maven goal
+
+3) Create Shell File 
+vi tomcat_deploy.sh ----> 
+
+#!/bin/bash
+
+# Exit immediately if any command fails
+set -e
+
+# ---------------- TOMCAT VERSION & PATHS ---------------- #
+
+# Specify the Tomcat version to install
+TOMCAT_VERSION=9.0.112
+
+# Compose the tar file name based on the version
+TOMCAT_TAR="apache-tomcat-${TOMCAT_VERSION}.tar.gz"
+
+# Download URL for the Tomcat package
+TOMCAT_URL="https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.112/bin/${TOMCAT_TAR}"
+
+# Installation directory for Tomcat on the server
+TOMCAT_DIR="/opt/tomcat"
+
+# ---------------- WAR FILE DETAILS ---------------- #
+
+# Name of the WAR file to deploy (copied via Ansible)
+WAR_NAME="myapp.war"
+
+# Location where the WAR file will be available on the remote server
+WAR_SOURCE="/tmp/${WAR_NAME}"
+
+# ---------------- LOGGING ---------------- #
+
+# Logfile to store deployment logs
+LOGFILE="/var/log/tomcat_deploy.log"
+
+echo "===== Starting Tomcat Deployment: $(date) =====" | tee -a $LOGFILE
+
+# ---------------- STEP 1: INSTALL JAVA ---------------- #
+
+echo "[1/8] Installing Java..." | tee -a $LOGFILE
+# Amazon Linux 2023 uses 'dnf', and Amazon Corretto 17 is recommended
+sudo dnf install -y java-17-amazon-corretto-devel >> $LOGFILE 2>&1
+
+# ---------------- STEP 2: CREATE TOMCAT DIR ---------------- #
+
+echo "[2/8] Creating Tomcat directory..." | tee -a $LOGFILE
+# Ensure the directory exists
+sudo mkdir -p $TOMCAT_DIR
+
+# Move to /opt directory for extraction
+cd /opt
+
+# ---------------- STEP 3: DOWNLOAD TOMCAT ---------------- #
+
+echo "[3/8] Downloading Tomcat..." | tee -a $LOGFILE
+# Download the Tomcat tar.gz file
+sudo curl -O $TOMCAT_URL >> $LOGFILE 2>&1
+
+# ---------------- STEP 4: EXTRACT TOMCAT ---------------- #
+
+echo "[4/8] Extracting Tomcat..." | tee -a $LOGFILE
+# Extract the downloaded tar file
+sudo tar xvf $TOMCAT_TAR >> $LOGFILE 2>&1
+
+# Move extracted content to Tomcat_DIR (/opt/tomcat)
+sudo mv apache-tomcat-${TOMCAT_VERSION}/* $TOMCAT_DIR/
+
+# Cleanup extracted folder & tar file
+sudo rm -rf apache-tomcat-${TOMCAT_VERSION}
+sudo rm -f $TOMCAT_TAR
+
+# ---------------- STEP 5: CREATE ADMIN USER ---------------- #
+
+echo "[5/8] Creating Tomcat admin user..." | tee -a $LOGFILE
+
+# Overwrite tomcat-users.xml with an admin user
+sudo bash -c "cat <<EOF > $TOMCAT_DIR/conf/tomcat-users.xml
+<tomcat-users>
+    <role rolename=\"manager-gui\"/>
+    <role rolename=\"admin-gui\"/>
+    <user username=\"admin\" password=\"admin123\" roles=\"manager-gui,admin-gui\"/>
+</tomcat-users>
+EOF"
+
+# ---------------- STEP 6: ENABLE REMOTE ACCESS ---------------- #
+
+echo "[6/8] Allowing remote access to manager & host-manager..." | tee -a $LOGFILE
+
+# Remove the RemoteAddrValve restriction that blocks remote GUI access
+sudo sed -i 's/<Valve.*RemoteAddrValve.*>/<!-- Removed for remote access -->/' \
+    $TOMCAT_DIR/webapps/manager/META-INF/context.xml
+
+sudo sed -i 's/<Valve.*RemoteAddrValve.*>/<!-- Removed for remote access -->/' \
+    $TOMCAT_DIR/webapps/host-manager/META-INF/context.xml
+
+# ---------------- STEP 7: DEPLOY WAR FILE ---------------- #
+
+echo "[7/8] Deploying WAR file..." | tee -a $LOGFILE
+
+# Check if the WAR file exists at /tmp
+if [ -f "$WAR_SOURCE" ]; then
+    # Copy WAR to Tomcat webapps folder for deployment
+    sudo cp "$WAR_SOURCE" "$TOMCAT_DIR/webapps/"
+else
+    # If WAR file is missing, exit with error
+    echo "[ERROR] WAR file not found at $WAR_SOURCE" | tee -a $LOGFILE
+    exit 1
+fi
+
+# ---------------- STEP 8: CREATE SYSTEMD SERVICE ---------------- #
+
+echo "[8/8] Creating Tomcat systemd service..." | tee -a $LOGFILE
+
+# Create a systemd service to manage Tomcat
+sudo bash -c "cat <<EOF > /etc/systemd/system/tomcat.service
+[Unit]
+Description=Apache Tomcat Web Application Container
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=$TOMCAT_DIR/bin/startup.sh
+ExecStop=$TOMCAT_DIR/bin/shutdown.sh
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+EOF"
+
+# Reload systemd to load the new service
+echo "Reloading systemd & starting Tomcat..." | tee -a $LOGFILE
+sudo systemctl daemon-reload
+
+# Start Tomcat service
+sudo systemctl start tomcat
+
+# Enable Tomcat to start at boot
+sudo systemctl enable tomcat
+
+# ---------------- FINISH ---------------- #
+
+echo "===== Tomcat Deployment Completed Successfully: $(date) =====" | tee -a $LOGFILE
+
+
+4) Create Playbook
+vi deploy-tomcat.yml ----> 
+
+---
+- name: Install Tomcat and deploy WAR on dev-servers
+  hosts: dev-servers
+  become: yes
+
+  tasks:
+    - name: Copy Tomcat deployment script
+      copy:
+        src: /root/tomcat_deploy.sh
+        dest: /tmp/tomcat_deploy.sh
+        mode: '0755'
+
+    - name: Copy WAR file to remote server
+      copy:
+        src: /root/Hotstar-App/target/myapp.war
+        dest: /tmp/myapp.war
+        mode: '0644'
+
+    - name: Execute Tomcat installation and deployment script
+      command: /tmp/tomcat_deploy.sh
+
+5) Run the Playbook
+ansible-playbook deploy-tomcat.yml
+
+6) Access the App on dev-servers using;
+http://<Dev1ServerPublicIP>:8080/myapp/
+http://<Dev2ServerPublicIP>:8080/myapp/
+
+==> SETUP Module
+Setup module will show the system info about the worker nodes
+ansible all -m setup
+
+==> Ansible TAGS
+Ansible tags are used to execute specific tasks from the playbook
+TAGS are used to execute or skip specific tasks
+ansible-playbook playbook8.yml --tags kastro-user
+ansible-playbok playbook8.yml --tags git,docker
+
+ansible-playbook playbook8.yml --skip-tags "git,kastro-user"
+
+==> VARIABLES
+The concept of using variables is, in future if i want to change the tool name, i can only change the variable assigned to the value. This is to simplify the task
+Variable is anything that holds a value
+types;
+Static		- defined inside the playbook
+Dynamic	- not defined inside the playbook
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

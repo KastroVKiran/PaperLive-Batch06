@@ -1,0 +1,6 @@
+- name: printing messages
+  hosts: all
+  tasks:
+    - name: printing the message
+      debug:
+      msg: "number of cpus: {{ ansible_processor_vcpus }}, totalmemsize: {{ ansible_memtotal_mb }}"
