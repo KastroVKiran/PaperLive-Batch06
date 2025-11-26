@@ -1,0 +1,30 @@
+#Ansible Roles Related Playbook
+
+- name: installation of packages
+  yum: 
+    name: "{{item}}"
+    state: present
+  loop:
+    - git
+    - maven
+    - docker
+
+
+- name: creation of users
+  user: 
+    name: "{{item}}"
+    state: present
+  with_items::
+    - ajay
+    - ajit
+    - anand
+
+- name: installation of webserver
+  yum:
+    name: httpd
+    state: present
+
+- name: starting httpd
+  service:
+    name: httpd
+    state: started

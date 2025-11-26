@@ -1,0 +1,229 @@
+(Day 31) 26-11-2025
+~~~~~~~~~~~~~~~~~
+Ansible
+~~~~~~~~~~~~~~~~~
+==> LOOPS
+Loops are used to reduce the number of lines in a code
+Lets say i want to install 10 packages, so we need to write 10 tasks. Instead of writing 10 tasks, we can use LOOPS concept to reduce the number of lines in the playbook
+
+==> SHELL, COMMAND, RAW
+These are different modules which works in the same way
+
+==> NOTIFY & HANDLERS
+10 tasks in the playbook
+
+task 1: install apache
+task 2:
+task 3:
+task 4:
+task 5: start apache
+
+i want to call task 5 to get executed immediately after task 1
+
+If one task is dependent upon another task, then we will use HANDLERS
+
+task1: git --version
+task2: install git
+
+==> WHEN module
+
+Cluster ----> Group of servers
+
+Types of servers;
+Homogenous	- servers with same OS and flavour
+Heterogenous	- servers with different OS and flavour
+
+2 amazon Linux
+2 Ubuntu
+
+==> LOOKUP module
+
+kastro.txt ---> Some data ----> I want to read the data available in kastro.txt using playbook
+
+
+==> ANSIBLE STRATEGIES
+1. linear (default)
+moves to the next only after all hosts complete the execution of current task
+
+2. free
+each host executes tasks as fast as it can, without waiting for others
+
+- name: strategies
+  hosts: all
+  strategy: Free  #this strategy can be changed based on the requirement
+  tasks:
+    - name: installation of git
+      yum:
+        name: git
+        state: present
+
+==> ANSIBLE ROLES
+So far we have written different modules in a single file. In this case, if i want to call a specific module it becomes difficult. So what we can do is, we will write separate playbooks for each module and then we can call whichever playbook we need. This we can do it using Ansible Roles
+
+Ansible roles helps to organize and structure the playbooks by breaking them into reusable components. They simplify automation by grouping related tasks, handlers, variables and templates in a standardized directory structure.
+
+Ansible roles are used to divide the playbook into directory structure
+
+3 roles (packages, users, webservers)
+
+==> ANSIBLE GALAXY
+If you dont want to manually create a directory structure, in that we will use Ansible Galaxy which is a repo that consists of pre-built roles
+
+==> ANSIBLE VAULT
+Ansible vault will encrypt the yml files
+It is used to store the yml files in a secure way
+
+==> Asynchronous & Polling
+By default, ansible runs task synchronously, meaning it waits for each task to finish before moving the next task. However, for long-running tasks, you can use asynchronous execution with polling to avoid timeouts
+
+For every task in ansible, we can set a time limit
+If the task is not performed in that time limit, ansible will stop playbook execution
+This is called as Asynchronous and Polling
+
+---
+- name: Demo of async and poll
+  hosts: all
+  become: yes
+
+  tasks:
+
+    # ----------------------------------------------------
+    # Task 1: Start a long-running job (runs in background)
+    # ----------------------------------------------------
+    - name: Run a long task asynchronously (sleep 20)
+      command: /bin/sleep 20
+      async: 30
+      poll: 5
+      register: long_task_result
+
+    # ----------------------------------------------------
+    # Task 2: Print result of the async task
+    # ----------------------------------------------------
+    - name: Print async job result
+      debug:
+        var: long_task_result
+
+✅ Understanding async & poll
+🔹 1. async
+
+Tells Ansible how long the task is allowed to run in the background.
+
+Example:
+
+async: 30
+
+
+Means the command is allowed to run up to 30 seconds before timing out.
+
+🔹 2. poll
+
+Defines how Ansible waits for the task.
+
+poll value	Meaning
+poll: 0	Fire and forget (Don’t wait at all)
+Any other number (e.g., poll: 5)	Check every X seconds until job finishes
+⭐ How the above playbook works
+✔ Step 1: Start long task
+
+We run /bin/sleep 20 which takes 20 seconds.
+
+async: 30   → allow max 30 sec
+poll: 5     → check every 5 sec
+
+
+So Ansible will:
+
+Start the job in background
+
+Check every 5 seconds if it's done
+
+Collect the result when it finishes
+
+✔ Step 2: Print result
+
+The result will look like:
+
+"finished": 1,
+"stdout": "",
+"stderr": "",
+"cmd": "/bin/sleep 20"
+
+🚀 Example: Fire-and-forget mode (async + poll = 0)
+
+If you want Ansible to start the task and move on immediately:
+
+- name: Run job in true async (fire and forget)
+  command: /bin/sleep 60
+  async: 120
+  poll: 0
+  register: job_info
+
+
+Ansible returns immediately with a job ID:
+
+"ansible_job_id": "123456789012.1234"
+
+
+Later you can check status using:
+
+- name: Check job later
+  async_status:
+    jid: "{{ job_info.ansible_job_id }}"
+  register: job_status
+  until: job_status.finished
+  retries: 20
+  delay: 5
+
+🎯 Summary
+✔ Use async when:
+
+Job takes long time (backup, big install, large copy)
+
+You don’t want to block the playbook
+
+✔ Use poll to:
+
+poll: 0 → fire & forget
+
+poll: X → check every X seconds until done
+
+✔ Use async_status to track fire-and-forget job later.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

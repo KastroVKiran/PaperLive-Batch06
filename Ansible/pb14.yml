@@ -1,0 +1,62 @@
+---
+- name: Install packages and verify using notify/handlers
+  hosts: all
+  become: yes
+
+  tasks:
+    # -----------------------------
+    # Task 1: Install Git
+    # -----------------------------
+    - name: Install Git
+      package:
+        name: git
+        state: present
+      notify: Check Git Version
+
+    # -----------------------------
+    # Task 2: Install Maven
+    # -----------------------------
+    - name: Install Maven
+      package:
+        name: maven
+        state: present
+      notify: Check Maven Version
+
+    # -----------------------------
+    # Task 3: Install Tree
+    # -----------------------------
+    - name: Install Tree
+      package:
+        name: tree
+        state: present
+
+  # -----------------------------
+  # Handlers Section
+  # -----------------------------
+  handlers:
+
+    # Task 4: Check Git Version
+    - name: Check Git Version
+      command: git --version
+      register: git_version_output
+      listen: Check Git Version
+      changed_when: false
+      notify: Print Git Version
+
+    # Displays Git version to terminal
+    - name: Print Git Version
+      debug:
+        msg: "{{ git_version_output.stdout }}"
+
+    # Task 5: Check Maven Version
+    - name: Check Maven Version
+      command: mvn -version
+      register: maven_version_output
+      listen: Check Maven Version
+      changed_when: false
+      notify: Print Maven Version
+
+    # Displays Maven version to terminal
+    - name: Print Maven Version
+      debug:
+        msg: "{{ maven_version_output.stdout }}"

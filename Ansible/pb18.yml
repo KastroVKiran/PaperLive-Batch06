@@ -1,0 +1,9 @@
+- name: async and polling playbook
+  hosts: all
+  become: yes
+  ignore_error: yes
+  tasks:
+    - name: sleep task
+      command: sleep 30
+      async: 20
+      poll: 10

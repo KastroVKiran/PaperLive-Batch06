@@ -1,0 +1,25 @@
+- name: notify and handlers concept
+  hosts: all
+  become: yes
+  tasks:
+    - name: installation of apache
+      yum: name=httpd state=present
+      notify: starting apache
+
+  handlers:
+    - name: starting apache
+      service: name=httpd state=started
+
+
+- name: notify and handlers concept
+  hosts: all
+  become: yes
+  tasks:
+    - name: installation of apache
+      yum: name=httpd state=present
+      notify: starting apache
+
+  handlers:
+    - name: starting apache
+      service: name=httpd state=started
+      ignore_error: yes
