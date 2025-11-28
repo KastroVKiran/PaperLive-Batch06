@@ -1,0 +1,86 @@
+(Day 32) 27-11-2025
+~~~~~~~~~~~~~~~~~
+Terraform
+~~~~~~~~~~~~~~~~~
+AWS 	- EC2, S3, VPC, IAM,.....
+GCP
+Azure
+
+To automate the infra creation, we will use Terraform
+IaaC - Infrastructure as a Code
+
+Terraform was launched in 2014, developed by Hashicorp
+Developed by using Go Programming Language
+Terraform files will be written to automate the infrastructure creation
+.tf
+
+Alternatives;
+Open Tofu (forked version of terraform), Pulimi, AWS - Cloud Formation
+
+Terraform is cloud independent
+
+3 important files;
+main.tf
+variables.tf
+output.tf
+
+projectname/
+	provider.tf		- provider configurations - plugin to connect to the cloud - provider "aws"
+	version.tf		- sets the required terraform and provider version
+	backend.tf		- this file is used to configure the backend, which determines how and where terraform stores its data (terraform.tf state in latest versions)
+	main.tf			- contains the core resource definitions
+	variables.tf		- declare input variables
+	terraform.tfvars	- values are declared
+	output.tf			- output values
+
+
+backend.tf - 5 VMs using terraform and 3 VMs directly launched
+the data related to infrastructure created by using terraform will be maintained in a file which is known as "state file" - "backend.tf"
+
+Terraform Architecture
+terraform init			- initialize terraform - downloads provider plugins
+terraform validate		- verify terraform script syntax
+terraform fmt			- to arrange the terraform file structure
+terraform plan		- to see the information of the resources that may be/can be created by using .tf files
+terraform apply		- it is used to create the resources using .tf file
+terraform destroy		- it is used to delete the resources created by using .tf files
+
+Components of a .tf file
+Blocks
+Labels
+Arguments
+
+we cannot use space between the words. we will combine the words using _
+Ex: aws instance -- wrong
+aws_instance --right
+_ is identifier
+
+Architecture diagrams
+
+Terraform Installation Commands;
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+sudo yum -y install terraform
+terraform --version
+
++ ---> Creation
+- ---> Deletion
+~ ---> Updating
+
+JSON
+
+
+current state --- actual state of infr. resources --- tracks this by using terraform.tfstate file
+desired state --- it is what you define in the configuration files --- main.tf file
+
+VARIABLES
+1. length(list) - print the number of variables defined
+2. element	- print the specific variable
+3. concat	- combine multiple lists into a single list
+4. zipmap	- create a map from a list of keys and list of values
+
+
+
+
+
+

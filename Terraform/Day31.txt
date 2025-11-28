@@ -1,0 +1,843 @@
+(Day 33) 28-11-2025
+~~~~~~~~~~~~~~~~~
+Terraform
+~~~~~~~~~~~~~~~~~
+Terraform Installation Commands;
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+sudo yum -y install terraform
+terraform --version
+
+************************************************************************
+Creating EC2 VM using variables concept
+************************************************************************
+terraform-ec2/
+│
+├── main.tf
+├── variables.tf
+├── outputs.tf
+└── terraform.tfvars (optional)
+
+1️⃣ main.tf
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_instance" "ec2_instance" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+
+  tags = {
+    Name = var.instance_name
+  }
+}
+
+2️⃣ variables.tf
+variable "ami_id" {
+  description = "AMI ID to use for the EC2 instance"
+  type        = string
+  # Amazon Linux 2 AMI for us-east-1 (you can change this)
+  default     = "ami-0c02fb55956c7d316"
+}
+
+variable "instance_type" {
+  description = "Type of EC2 instance to launch"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "instance_name" {
+  description = "Name tag for the EC2 instance"
+  type        = string
+  default     = "Kastro-EC2"
+}
+
+3️⃣ outputs.tf
+output "instance_id" {
+  value = aws_instance.ec2_instance.id
+}
+
+output "public_ip" {
+  value = aws_instance.ec2_instance.public_ip
+}
+
+terraform init
+terraform plan
+terraform apply -auto-approve
+
+I don't want to create the infra using the default values mentioned in variables.tf file
+To provide custom values, we have 2 options;
+	1. Providing the values in the runtime
+
+
+	2. Providing the values in a separate file which is known as "terraform.tfvars"
+		
+
+When we create the infra using the above 2 options, terraform has updated the existing infra.
+To create a new infra without modifying the existing infra, we will use "for_each"
+
+for_each = toset
+
+====================
+✅ Updated Terraform configuration
+main.tf
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_instance" "ec2_instance" {
+  for_each = toset([var.instance_type])	 # for_each allows creating multiple resources dynamically. 
+									# Here, we convert the list [var.instance_type] into a set.
+  									# This means Terraform will create one EC2 instance per instance type.
+  ami           = var.ami_id
+  instance_type = each.key
+
+  tags = {
+    Name = "${var.instance_name}-${each.key}"	# "each.key" refers to the key from the for_each loop.
+  }
+}
+
+variables.tf
+variable "ami_id" {
+  description = "AMI ID for EC2"
+  type        = string
+  default     = "ami-0c02fb55956c7d316" # Amazon Linux 2
+}
+
+variable "instance_type" {
+  description = "Type of EC2 instance to launch"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "instance_name" {
+  description = "Base name for EC2 instance"
+  type        = string
+  default     = "Kastro-EC2"
+}
+
+outputs.tf
+output "instance_public_ips" {
+  value = { for k, v in aws_instance.ec2_instance : k => v.public_ip }	# We use a for expression to build a map of instance_type => public_ip
+}
+
+output "instance_ids" {
+  value = { for k, v in aws_instance.ec2_instance : k => v.id } # Similarly, this creates a map of instance_type => instance_id
+}
+
+
+
+======================
+------------------------------------------------------------------------------
+Declaring variables and resources in the main.tf file 
+------------------------------------------------------------------------------
+vi main.tf ---->
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+#below i have described all the variables required
+variable "instance_count" {
+  description = "this is the count of instances"
+  type        = number
+  default     = 3
+}
+
+variable "instance_ami" {
+  description = "*" 
+  type        = string
+  default     = "ami-08fe5144e4659a3b3"
+}
+
+variable "instance_type" {
+  description = "*"
+  type        = string
+  default     = "t2.micro" 
+}
+
+variable "instance_name" {
+  description = "*"
+  type        = string
+  default     = "TF-Server"
+}
+
+#From here we will write the tf code to create the resources using the variables declared above
+resource "aws_instance" "myinstance" {
+  count = var.instance_count
+  ami = var.instance_ami
+  instance_type = var.instance_type
+  tags = {
+    Name = var.instance_name
+  }
+}
+=======================
+------------------------------------------------------------------------------
+Declaring variables in the variables.tf and resources in main.tf file
+------------------------------------------------------------------------------
+So far we have kept variables and resource info kept in the same file i.e main.tf.
+Lets keep variables in a separate file and resource information in a separate file. 
+From the main.tf I can call variables.tf file to create the resources.
+
+vi variables.tf ---->
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+#below i have described all the variables required
+variable "instance_count" {
+  description = "this is the count of instances"
+  type        = number
+  default     = 3
+}
+
+variable "instance_ami" {
+  description = "*" 
+  type        = string
+  default     = "ami-08fe5144e4659a3b3"
+}
+
+variable "instance_type" {
+  description = "*"
+  type        = string
+  default     = "t2.micro" 
+}
+
+variable "instance_name" {
+  description = "*"
+  type        = string
+  default     = "TF Server"
+}
+
+ ----> terraform fmt ----> terraform validate ----> terraform plan 
+
+vi main.tf ----> 
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "myinstance" {
+  count = var.instance_count
+  ami = var.instance_ami
+  instance_type = var.instance_type
+  tags = {
+    Name = var.instance_name
+  }
+}
+=============================
+Lets create S3 bucket (as created in real-time)
+=========================================
+In this i will use different files instead of creating everything in a single file i.e main.tf
+vi provider.tf ---->
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "5.90.1"
+    }
+  }
+}
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+vi terraform.tfvars ---> In tfvar we will just assign a variable. 
+mybucket = "tf-example-kastro--s3-bucket"
+
+vi variables.tf ----> In tfvar we have assigned a variable, but for that variable we will declare the values in variables.tf file
+variable "mybucket" {
+  type        = string
+  description = "This is my Devops test bucket from TF"
+  default     = ""	#Here i dint kept any value because we have kept the values in tfvars file
+}
+
+vi main.tf ---->
+resource "aws_s3_bucket" "example" {
+  bucket = var.mybucket #Here am calling the variable defined in variables.tf file. The variable name is "mybucket"
+}
+
+=================
+Create VPC with 2 subnets and 2 route tables (a simple one)
+Let's create a complete Terraform demo to provision a VPC with:
+1 VPC → kastro-vpc
+2 subnets → kastro-public (public), kastro-private (private)
+2 route tables → kastro-public-rt, kastro-private-rt
+1 Internet Gateway → kastro-igw
+Public subnet connected to IGW via public route table
+
+1️⃣ variables.tf
+# AWS provider configuration
+provider "aws" {
+  region = "us-east-1"
+}
+
+# VPC variables
+variable "vpc_cidr" {
+  description = "CIDR block for VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+# Public subnet variables
+variable "public_subnet_cidr" {
+  description = "CIDR block for public subnet"
+  type        = string
+  default     = "10.0.1.0/24"
+}
+
+# Private subnet variables
+variable "private_subnet_cidr" {
+  description = "CIDR block for private subnet"
+  type        = string
+  default     = "10.0.2.0/24"
+}
+
+2️⃣ main.tf
+########################################
+# 1️⃣ Create VPC
+########################################
+resource "aws_vpc" "kastro_vpc" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "kastro-vpc"
+  }
+}
+
+########################################
+# 2️⃣ Create Internet Gateway
+########################################
+resource "aws_internet_gateway" "kastro_igw" {
+  vpc_id = aws_vpc.kastro_vpc.id
+
+  tags = {
+    Name = "kastro-igw"
+  }
+}
+
+########################################
+# 3️⃣ Create Subnets
+########################################
+
+# Public subnet
+resource "aws_subnet" "kastro_public" {
+  vpc_id                  = aws_vpc.kastro_vpc.id
+  cidr_block              = var.public_subnet_cidr
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "kastro-public"
+  }
+}
+
+# Private subnet
+resource "aws_subnet" "kastro_private" {
+  vpc_id     = aws_vpc.kastro_vpc.id
+  cidr_block = var.private_subnet_cidr
+
+  tags = {
+    Name = "kastro-private"
+  }
+}
+
+########################################
+# 4️⃣ Create Route Tables
+########################################
+
+# Public Route Table
+resource "aws_route_table" "kastro_public_rt" {
+  vpc_id = aws_vpc.kastro_vpc.id
+
+  tags = {
+    Name = "kastro-public-rt"
+  }
+}
+
+# Private Route Table
+resource "aws_route_table" "kastro_private_rt" {
+  vpc_id = aws_vpc.kastro_vpc.id
+
+  tags = {
+    Name = "kastro-private-rt"
+  }
+}
+
+########################################
+# 5️⃣ Associate Route Tables with Subnets
+########################################
+
+# Associate public subnet with public route table
+resource "aws_route_table_association" "public_assoc" {
+  subnet_id      = aws_subnet.kastro_public.id
+  route_table_id = aws_route_table.kastro_public_rt.id
+}
+
+# Associate private subnet with private route table
+resource "aws_route_table_association" "private_assoc" {
+  subnet_id      = aws_subnet.kastro_private.id
+  route_table_id = aws_route_table.kastro_private_rt.id
+}
+
+########################################
+# 6️⃣ Add Route to Internet Gateway for Public Subnet
+########################################
+resource "aws_route" "public_internet_access" {
+  route_table_id         = aws_route_table.kastro_public_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.kastro_igw.id
+}
+
+3️⃣ outputs.tf
+output "vpc_id" {
+  value = aws_vpc.kastro_vpc.id
+}
+
+output "public_subnet_id" {
+  value = aws_subnet.kastro_public.id
+}
+
+output "private_subnet_id" {
+  value = aws_subnet.kastro_private.id
+}
+
+output "public_route_table_id" {
+  value = aws_route_table.kastro_public_rt.id
+}
+
+output "private_route_table_id" {
+  value = aws_route_table.kastro_private_rt.id
+}
+
+output "internet_gateway_id" {
+  value = aws_internet_gateway.kastro_igw.id
+}
+
+terraform init
+terraform plan
+terraform apply -auto-approve
+
+=========================================
+Demo 2 - VPC Creation + 2 VMs creation
+=========================================
+1️⃣ Updated variables.tf
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+# VPC
+variable "vpc_cidr" {
+  description = "CIDR block for VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+# Subnets
+variable "public_subnet_cidr" {
+  description = "CIDR block for public subnet"
+  type        = string
+  default     = "10.0.1.0/24"
+}
+
+variable "private_subnet_cidr" {
+  description = "CIDR block for private subnet"
+  type        = string
+  default     = "10.0.2.0/24"
+}
+
+# EC2 instances
+variable "public_instance_ami" {
+  description = "AMI ID for public subnet EC2"
+  type        = string
+  default     = "ami-052064a798f08f0d3"  # Amazon Linux 2
+}
+
+variable "private_instance_ami" {
+  description = "AMI ID for private subnet EC2"
+  type        = string
+  default     = "ami-052064a798f08f0d3"  # Amazon Linux 2
+}
+
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "public_instance_name" {
+  description = "Name tag for public subnet EC2"
+  type        = string
+  default     = "Public-VM"
+}
+
+variable "private_instance_name" {
+  description = "Name tag for private subnet EC2"
+  type        = string
+  default     = "Private-VM"
+}
+
+2️⃣ Updated main.tf
+########################################
+# 1️⃣ VPC
+########################################
+resource "aws_vpc" "kastro_vpc" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = { Name = "kastro-vpc" }
+}
+
+########################################
+# 2️⃣ Internet Gateway
+########################################
+resource "aws_internet_gateway" "kastro_igw" {
+  vpc_id = aws_vpc.kastro_vpc.id
+  tags   = { Name = "kastro-igw" }
+}
+
+########################################
+# 3️⃣ Subnets
+########################################
+resource "aws_subnet" "kastro_public" {
+  vpc_id                  = aws_vpc.kastro_vpc.id
+  cidr_block              = var.public_subnet_cidr
+  map_public_ip_on_launch = true
+  tags = { Name = "kastro-public" }
+}
+
+resource "aws_subnet" "kastro_private" {
+  vpc_id     = aws_vpc.kastro_vpc.id
+  cidr_block = var.private_subnet_cidr
+  tags = { Name = "kastro-private" }
+}
+
+########################################
+# 4️⃣ Route Tables
+########################################
+resource "aws_route_table" "kastro_public_rt" {
+  vpc_id = aws_vpc.kastro_vpc.id
+  tags   = { Name = "kastro-public-rt" }
+}
+
+resource "aws_route_table" "kastro_private_rt" {
+  vpc_id = aws_vpc.kastro_vpc.id
+  tags   = { Name = "kastro-private-rt" }
+}
+
+########################################
+# 5️⃣ Associate Route Tables
+########################################
+resource "aws_route_table_association" "public_assoc" {
+  subnet_id      = aws_subnet.kastro_public.id
+  route_table_id = aws_route_table.kastro_public_rt.id
+}
+
+resource "aws_route_table_association" "private_assoc" {
+  subnet_id      = aws_subnet.kastro_private.id
+  route_table_id = aws_route_table.kastro_private_rt.id
+}
+
+########################################
+# 6️⃣ Public route to IGW
+########################################
+resource "aws_route" "public_internet_access" {
+  route_table_id         = aws_route_table.kastro_public_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.kastro_igw.id
+}
+
+########################################
+# 7️⃣ EC2 Instances
+########################################
+
+# Public Subnet EC2
+resource "aws_instance" "public_ec2" {
+  ami           = var.public_instance_ami
+  instance_type = var.instance_type
+  subnet_id     = aws_subnet.kastro_public.id
+  associate_public_ip_address = true
+
+  tags = { Name = var.public_instance_name }
+}
+
+# Private Subnet EC2
+resource "aws_instance" "private_ec2" {
+  ami           = var.private_instance_ami
+  instance_type = var.instance_type
+  subnet_id     = aws_subnet.kastro_private.id
+  associate_public_ip_address = false
+
+  tags = { Name = var.private_instance_name }
+}
+
+3️⃣ outputs.tf
+output "vpc_id" {
+  value = aws_vpc.kastro_vpc.id
+}
+
+output "public_subnet_id" {
+  value = aws_subnet.kastro_public.id
+}
+
+output "private_subnet_id" {
+  value = aws_subnet.kastro_private.id
+}
+
+output "internet_gateway_id" {
+  value = aws_internet_gateway.kastro_igw.id
+}
+
+output "public_ec2_id" {
+  value = aws_instance.public_ec2.id
+}
+
+output "private_ec2_id" {
+  value = aws_instance.private_ec2.id
+}
+
+output "public_ec2_ip" {
+  value = aws_instance.public_ec2.public_ip
+}
+
+his will create:
+VPC: kastro-vpc
+Public subnet: kastro-public
+Private subnet: kastro-private
+Route tables: kastro-public-rt, kastro-private-rt
+Internet Gateway: kastro-igw
+Public EC2: Public-VM (with public IP)
+Private EC2: Private-VM (no public IP)
+
+============================
+Terraform Modules
+----------------------------------
+
+🗂️ 2️⃣ Folder Structure
+terraform-modules-project/
+│
+├── modules/
+│   ├── ec2_instance/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   └── s3_bucket/
+│       ├── main.tf
+│       ├── variables.tf
+│       └── outputs.tf
+│
+├── environments/
+│   ├── dev/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── terraform.tfvars
+│   └── prod/
+│       ├── main.tf
+│       ├── variables.tf
+│       └── terraform.tfvars
+│
+└── provider.tf
+
+☁️ 3️⃣ Step-by-Step Approach
+We’ll do this in 3 stages:
+Create reusable modules (for EC2 and S3).
+Call these modules separately in Dev and Prod folders.
+Initialize and apply Terraform for each environment.
+
+🔧 4️⃣ Module 1: EC2 Instance
+📁 modules/ec2_instance/main.tf
+resource "aws_instance" "this" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  key_name      = var.key_name
+
+  tags = {
+    Name        = var.instance_name
+    Environment = var.environment
+  }
+}
+
+📁 modules/ec2_instance/variables.tf
+variable "ami_id" {}
+variable "instance_type" {}
+variable "key_name" {}
+variable "instance_name" {}
+variable "environment" {}
+
+📁 modules/ec2_instance/outputs.tf
+output "instance_id" {
+  value = aws_instance.this.id
+}
+
+output "public_ip" {
+  value = aws_instance.this.public_ip
+}
+
+🪣 5️⃣ Module 2: S3 Bucket
+📁 modules/s3_bucket/main.tf
+resource "aws_s3_bucket" "this" {
+  bucket = var.bucket_name
+  tags = {
+    Environment = var.environment
+  }
+}
+
+📁 modules/s3_bucket/variables.tf
+variable "bucket_name" {}
+variable "environment" {}
+
+📁 modules/s3_bucket/outputs.tf
+output "bucket_arn" {
+  value = aws_s3_bucket.this.arn
+}
+
+🌍 6️⃣ Provider Configuration
+📁 provider.tf
+(Used by both dev and prod environments)
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+
+  required_version = ">= 1.6.0"
+}
+
+provider "aws" {
+  region = var.region
+}
+
+🧩 7️⃣ DEV Environment
+📁 environments/dev/main.tf
+module "dev_ec2" {
+  source        = "../../modules/ec2_instance"
+  ami_id        = var.ami_id
+  instance_type = var.instance_type
+  key_name      = var.key_name
+  instance_name = "dev-ec2-instance"
+  environment   = "dev"
+}
+
+module "dev_s3" {
+  source       = "../../modules/s3_bucket"
+  bucket_name  = "mycompany-dev-bucket"
+  environment  = "dev"
+}
+
+output "dev_instance_public_ip" {
+  value = module.dev_ec2.public_ip
+}
+
+output "dev_s3_bucket_arn" {
+  value = module.dev_s3.bucket_arn
+}
+
+📁 environments/dev/variables.tf
+variable "region" {}
+variable "ami_id" {}
+variable "instance_type" {}
+variable "key_name" {}
+
+📁 environments/dev/terraform.tfvars
+region         = "us-east-1"
+ami_id         = "ami-0abcdef1234567890"
+instance_type  = "t2.micro"
+key_name       = "my-dev-key"
+
+🏭 8️⃣ PROD Environment
+📁 environments/prod/main.tf
+module "prod_ec2" {
+  source        = "../../modules/ec2_instance"
+  ami_id        = var.ami_id
+  instance_type = var.instance_type
+  key_name      = var.key_name
+  instance_name = "prod-ec2-instance"
+  environment   = "prod"
+}
+
+module "prod_s3" {
+  source       = "../../modules/s3_bucket"
+  bucket_name  = "mycompany-prod-bucket"
+  environment  = "prod"
+}
+
+output "prod_instance_public_ip" {
+  value = module.prod_ec2.public_ip
+}
+
+output "prod_s3_bucket_arn" {
+  value = module.prod_s3.bucket_arn
+}
+
+📁 environments/prod/variables.tf
+variable "region" {}
+variable "ami_id" {}
+variable "instance_type" {}
+variable "key_name" {}
+
+📁 environments/prod/terraform.tfvars
+region         = "us-east-1"
+ami_id         = "ami-0abcdef1234567890"
+instance_type  = "t3.medium"
+key_name       = "my-prod-key"
+
+⚙️ 9️⃣ Commands to Execute
+🖥️ Step 1: Navigate to Dev environment
+cd environments/dev
+terraform init
+terraform plan
+terraform apply -auto-approve 
+
+✅ This will create:
+EC2 instance → t2.micro
+S3 bucket → mycompany-dev-bucket
+
+🖥️ Step 2: Navigate to Prod environment
+cd ../prod
+terraform init
+terraform plan
+terraform apply -auto-approve
+
+✅ This will create:
+EC2 instance → t3.medium
+S3 bucket → mycompany-prod-bucket
+
+
+Securing the Statefile;
+Same project ---- we will maintain single state file
+
+Person 1 - EC2 - us-east-1
+	terraform apply - 9.30 AM
+	EC2 instance gets created
+
+Person 2 - VPC -us-east-1
+	terraform apply - 9.50 AM
+	VPC gets created
+
+Lock the statefile using DynamoDB
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
